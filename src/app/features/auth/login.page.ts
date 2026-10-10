@@ -38,6 +38,9 @@ import { notBlank } from '../../shared/forms/validators';
         />
 
         <form class="stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          @if (accountDeleted) {
+            <div class="notice" role="status">Sua conta foi excluída. Você pode criar uma nova quando quiser.</div>
+          }
           @if (sessionExpired) {
             <div class="notice" role="status">Sua sessão expirou. Entre novamente para continuar.</div>
           }
@@ -90,6 +93,7 @@ export class LoginPage {
   private readonly router = inject(Router);
 
   protected readonly sessionExpired = inject(ActivatedRoute).snapshot.queryParamMap.has('expired');
+  protected readonly accountDeleted = inject(ActivatedRoute).snapshot.queryParamMap.has('deleted');
   protected readonly request = createRequestState();
 
   protected readonly form = this.fb.group({

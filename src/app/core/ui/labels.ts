@@ -70,6 +70,7 @@ export const DRIVER_STATUS_VIEW: Readonly<Record<DriverStatus, StatusView>> = {
   PendingReview: { label: 'Em análise', tone: 'black' },
   Approved: { label: 'Aprovado', tone: 'red' },
   Rejected: { label: 'Recusado', tone: 'deep' },
+  Removed: { label: 'Conta excluída', tone: 'muted' },
 };
 
 export const DELIVERY_STATUS_VIEW: Readonly<Record<DeliveryStatus, StatusView>> = {

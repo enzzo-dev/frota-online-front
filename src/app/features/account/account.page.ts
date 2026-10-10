@@ -72,6 +72,16 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
           }
         </section>
 
+        <a class="card card--link row row--between" routerLink="/privacy">
+          <span class="row">
+            <ion-icon name="shield-checkmark-outline" aria-hidden="true" />
+            <span>
+              <strong class="strong">Privacidade e meus dados</strong>
+              <span class="muted small" style="display: block">Baixar meus dados ou excluir a conta</span>
+            </span>
+          </span>
+        </a>
+
         <button class="btn btn--ghost btn--block" type="button" [disabled]="signingOut()" (click)="signOut()">
           @if (signingOut()) {
             <ion-spinner name="crescent" />

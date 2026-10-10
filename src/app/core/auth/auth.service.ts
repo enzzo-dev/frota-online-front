@@ -70,6 +70,11 @@ export class AuthService {
     await this.router.navigateByUrl('/auth/login', { replaceUrl: true });
   }
 
+  /** Forgets the session locally, without calling the API: the server already deleted it (account erasure). */
+  discardSession(): void {
+    this.session.end();
+  }
+
   /** The refresh token is gone, used or expired: drop the session and ask for a new sign-in. */
   expireSession(): void {
     if (!this.session.isAuthenticated()) {

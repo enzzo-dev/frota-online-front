@@ -13,6 +13,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/terms/terms.page').then((m) => m.TermsPage),
   },
   {
+    path: 'privacy',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/account/privacy.page').then((m) => m.PrivacyPage),
+  },
+  {
     path: 'driver',
     canActivate: [roleGuard('Driver')],
     loadChildren: () => import('./features/driver/driver.routes').then((m) => m.DRIVER_ROUTES),

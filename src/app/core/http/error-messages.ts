@@ -11,6 +11,9 @@ export const ERROR_MESSAGES: Readonly<Record<string, string>> = {
   not_found: 'Não encontramos o que você procurou.',
   conflict: 'Essa ação conflita com o estado atual. Atualize e tente de novo.',
 
+  'privacy.account_not_found': 'Conta não encontrada ou já excluída.',
+  'privacy.admin_not_allowed': 'Contas de administrador só podem ser removidas por outro administrador.',
+  'privacy.active_deliveries': 'Conclua ou cancele as entregas em andamento antes de excluir a conta.',
   'auth.invalid_credentials': 'E-mail ou senha incorretos.',
   'auth.invalid_refresh_token': 'Sua sessão expirou. Entre novamente.',
   'auth.user_inactive': 'Esta conta está desativada. Fale com o suporte.',

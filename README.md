@@ -29,3 +29,8 @@ npm run build      # production build in dist/
 - `SessionPersistence`: localStorage by default; override with a secure-storage implementation on native.
 - `FileUploader`: the API has no upload endpoint yet, so the default only registers file metadata
   (`POST /driver/documents`). Provide a real uploader when the endpoint exists.
+
+## Privacy (LGPD)
+`/privacy` (Account → "Privacidade e meus dados") uses `GET /me/data` to download everything held about the
+user as JSON, and `POST /me/deletion` (password + confirm) to anonymize the account. After a successful deletion
+the local session is discarded without calling the API, since the server already removed the sessions.

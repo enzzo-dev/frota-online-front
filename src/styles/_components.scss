@@ -761,3 +761,26 @@
     display: none;
   }
 }
+
+/* ---------- Destructive actions ---------- */
+.btn--danger {
+  background: var(--red-deep);
+  border-color: var(--red-deep);
+}
+
+.btn--danger:hover {
+  background: var(--black);
+  border-color: var(--black);
+}
+
+.btn--danger-outline {
+  background: var(--white);
+  color: var(--red-deep);
+  border-color: var(--red);
+}
+
+.btn--danger-outline:hover {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--white);
+}

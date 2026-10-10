@@ -57,7 +57,7 @@ import { greaterThan } from '../../shared/forms/validators';
     </ion-header>
 
     <ion-content>
-      <form class="stack stack--lg sheet-body" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <form class="stack sheet-body" [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div class="dark-panel stack">
           <p class="strong">{{ freight().cargoDescription }}</p>
           <p class="small muted">
@@ -120,7 +120,7 @@ import { greaterThan } from '../../shared/forms/validators';
   `,
   styles: `
     .sheet-body {
-      padding: 4px 16px 32px;
+      padding: 16px 16px calc(32px + var(--ion-safe-area-bottom, 0px));
     }
   `,
 })

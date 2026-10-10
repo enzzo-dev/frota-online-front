@@ -128,7 +128,7 @@ import { DraftStop, moveStop, newStopId } from './freight-draft';
     </ol>
 
     <button class="btn btn--ghost btn--block slot__add" type="button" (click)="addMiddle()">
-      <ion-icon name="add-outline" aria-hidden="true" /> Adicionar outra parada no caminho
+      <ion-icon name="add-outline" aria-hidden="true" /> Adicionar parada no caminho
     </button>
   `,
 })
@@ -171,7 +171,7 @@ export class RoutePlannerComponent {
     if (last) {
       return 'Onde entregar (destino final)';
     }
-    return `Parada extra · ${this.typeLabel[stop.type].toLowerCase()}`;
+    return 'Parada extra';
   }
 
   protected placeholder(stop: DraftStop, first: boolean, last: boolean): string {

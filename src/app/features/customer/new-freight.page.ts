@@ -123,7 +123,7 @@ function localInputValue(date: Date): string {
               }
 
               @case (1) {
-                <form class="stack stack--lg" [formGroup]="cargoForm" (ngSubmit)="next()" novalidate>
+                <form class="stack" [formGroup]="cargoForm" (ngSubmit)="next()" novalidate>
                   <ion-input
                     formControlName="cargoDescription"
                     label="O que será transportado"

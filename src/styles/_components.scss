@@ -371,12 +371,13 @@
   position: relative;
 }
 
-.route::before {
+/* The dotted line runs from each pin to the next one, so it never passes the last pin. */
+.stop:not(:last-child)::before {
   content: '';
   position: absolute;
   left: 16px;
-  top: 22px;
-  bottom: 22px;
+  top: 18px;
+  bottom: -18px;
   border-left: 4px dotted var(--red);
 }
 
@@ -431,10 +432,10 @@
 }
 
 @media (min-width: 720px) {
-  .route::before {
+  .stop:not(:last-child)::before {
     left: 22px;
-    top: 28px;
-    bottom: 28px;
+    top: 24px;
+    bottom: -24px;
   }
 
   .stop {
@@ -459,7 +460,14 @@
 .form-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
+  gap: 12px;
+}
+
+/* Two short fields side by side, even on a phone (CEP and state, number and complement). */
+.form-pair {
+  display: grid;
+  grid-template-columns: var(--cols, 1fr 1fr);
+  gap: 12px;
 }
 
 @media (min-width: 560px) {

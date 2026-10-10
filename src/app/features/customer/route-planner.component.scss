@@ -9,13 +9,13 @@
   position: relative;
 }
 
-/* The dotted red line that joins the pins. */
-.planner::before {
+/* The dotted red line runs from each pin to the next one, so it follows the height of every slot. */
+.slot:not(:last-child)::before {
   content: '';
   position: absolute;
-  left: 17px;
-  top: 28px;
-  bottom: 40px;
+  left: 16px;
+  top: 30px;
+  bottom: -6px;
   border-left: 4px dotted var(--red);
 }
 
@@ -119,7 +119,11 @@
 }
 
 .slot__details {
-  padding-top: 4px;
+  padding-top: 2px;
+}
+
+.slot__body .items {
+  margin: 0;
 }
 
 .slot__item-form {
@@ -147,9 +151,10 @@
 }
 
 @media (min-width: 720px) {
-  .planner::before {
-    left: 23px;
-    top: 34px;
+  .slot:not(:last-child)::before {
+    left: 22px;
+    top: 38px;
+    bottom: -8px;
   }
 
   .slot {

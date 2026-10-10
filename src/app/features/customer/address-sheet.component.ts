@@ -50,7 +50,7 @@ import { notBlank, zipCode } from '../../shared/forms/validators';
     </ion-header>
 
     <ion-content>
-      <form class="stack stack--lg sheet-body" [formGroup]="form" (ngSubmit)="save()" novalidate>
+      <form class="stack sheet-body" [formGroup]="form" (ngSubmit)="save()" novalidate>
         <ion-input
           formControlName="label"
           label="Apelido"
@@ -60,7 +60,7 @@ import { notBlank, zipCode } from '../../shared/forms/validators';
           helperText="Como você reconhece este endereço."
           errorText="Dê um apelido ao endereço"
         />
-        <div class="form-grid form-grid--2">
+        <div class="form-pair" style="--cols: 1.2fr 1fr">
           <ion-input
             formControlName="zipCode"
             label="CEP"
@@ -94,7 +94,7 @@ import { notBlank, zipCode } from '../../shared/forms/validators';
           autocomplete="address-line1"
           errorText="Informe a rua"
         />
-        <div class="form-grid form-grid--2">
+        <div class="form-pair" style="--cols: 0.8fr 1.2fr">
           <ion-input
             formControlName="number"
             label="Número"
@@ -102,9 +102,9 @@ import { notBlank, zipCode } from '../../shared/forms/validators';
             fill="outline"
             errorText="Informe o número"
           />
-          <ion-input formControlName="complement" label="Complemento (opcional)" labelPlacement="stacked" fill="outline" />
+          <ion-input formControlName="complement" label="Complemento" labelPlacement="stacked" fill="outline" placeholder="Opcional" />
         </div>
-        <div class="form-grid form-grid--2">
+        <div class="form-pair">
           <ion-input
             formControlName="district"
             label="Bairro"
@@ -135,7 +135,7 @@ import { notBlank, zipCode } from '../../shared/forms/validators';
   `,
   styles: `
     .sheet-body {
-      padding: 4px 16px 32px;
+      padding: 16px 16px calc(32px + var(--ion-safe-area-bottom, 0px));
     }
   `,
 })

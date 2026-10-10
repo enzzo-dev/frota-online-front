@@ -54,16 +54,24 @@ const POLL_MS = 20_000;
         <ion-refresher-content />
       </ion-refresher>
 
-      <div class="page">
+      <div class="page page--wide">
         <app-hero
           title="Seus fretes"
-          lede="Publique uma rota, receba propostas dos motoristas e aprove a melhor."
+          lede="Peça um frete, compare os preços dos motoristas e aprove o melhor."
         >
           <a class="btn btn--on-dark" routerLink="/customer/freights/new">
             <ion-icon name="add-outline" aria-hidden="true" />
-            Novo frete
+            Pedir novo frete
           </a>
         </app-hero>
+
+        @if (all().length > 0) {
+          <div class="stats">
+            <div class="stat"><span class="stat__num stat__num--red">{{ counts().open }}</span><span class="stat__label">Aguardando propostas</span></div>
+            <div class="stat"><span class="stat__num">{{ counts().proposals }}</span><span class="stat__label">Propostas recebidas</span></div>
+            <div class="stat"><span class="stat__num">{{ counts().approved }}</span><span class="stat__label">Fretes aprovados</span></div>
+          </div>
+        }
 
         <ion-segment [value]="filter()" (ionChange)="onFilter($event.detail.value)">
           <ion-segment-button value="all">Todos</ion-segment-button>
@@ -85,7 +93,7 @@ const POLL_MS = 20_000;
             </app-empty-state>
           }
 
-          <div class="stack">
+          <div class="grid-cards">
             @for (freight of list; track freight.id) {
               <a class="card card--link stack" [routerLink]="['/customer/freights', freight.id]">
                 <div class="row row--between row--wrap">
@@ -120,6 +128,10 @@ const POLL_MS = 20_000;
           <div class="skeleton"></div>
         }
       </div>
+
+      <a class="btn fab-new" routerLink="/customer/freights/new" aria-label="Pedir novo frete">
+        <ion-icon name="add-outline" aria-hidden="true" /> Novo frete
+      </a>
     </ion-content>
   `,
 })
@@ -132,6 +144,17 @@ export class FreightsPage {
   protected readonly filter = signal<Filter>('all');
 
   private readonly freights = signal<Freight[] | null>(null);
+
+  protected readonly all = computed(() => this.freights() ?? []);
+
+  protected readonly counts = computed(() => {
+    const list = this.all();
+    return {
+      open: list.filter((freight) => freight.status === 'Open').length,
+      proposals: list.filter((freight) => freight.status === 'Open').reduce((sum, freight) => sum + freight.pendingProposals, 0),
+      approved: list.filter((freight) => freight.status === 'Approved').length,
+    };
+  });
 
   protected readonly visible = computed(() => {
     const all = this.freights();

@@ -54,7 +54,7 @@ const POLL_MS = 20_000;
         <ion-refresher-content />
       </ion-refresher>
 
-      <div class="page">
+      <div class="page page--wide">
         <app-hero
           title="Minhas propostas"
           lede="Acompanhe o que você enviou. Quando o cliente aprova, a corrida aparece em Corridas."
@@ -79,7 +79,7 @@ const POLL_MS = 20_000;
             </app-empty-state>
           }
 
-          <div class="stack">
+          <div class="grid-cards">
             @for (proposal of list; track proposal.id) {
               <article class="card stack" [class.card--accent]="proposal.status === 'Accepted'">
                 <div class="row row--between">

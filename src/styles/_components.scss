@@ -7,7 +7,7 @@
   background-color: var(--black);
   color: var(--white);
   border-radius: 28px;
-  padding: 28px 22px 26px;
+  padding: 22px 20px 20px;
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
@@ -70,7 +70,7 @@
 }
 
 .roadline {
-  margin-top: 26px;
+  margin-top: 18px;
   height: 6px;
   border-radius: 999px;
   max-width: 320px;
@@ -593,4 +593,171 @@
   background: var(--red);
   border-radius: 999px;
   transition: width 0.3s;
+}
+
+/* ---------- Choices: big tappable options instead of dropdowns ---------- */
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.choice-grid--wide {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 560px) {
+  .choice-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .choice-grid--wide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--field-line);
+  border-radius: var(--r-sm);
+  background: var(--white);
+  color: var(--black);
+  font: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    color 0.15s;
+}
+
+.choice:hover {
+  border-color: var(--black);
+}
+
+.choice.is-selected {
+  background: var(--black);
+  border-color: var(--black);
+  color: var(--white);
+}
+
+.choice:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.choice--card {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 18px;
+  text-align: left;
+}
+
+.choice--card ion-icon {
+  font-size: 26px;
+  color: var(--red);
+}
+
+.choice--card small {
+  font-weight: 500;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.choice--card.is-selected ion-icon {
+  color: var(--white);
+}
+
+.choice--row {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  padding: 14px 16px;
+}
+
+.choice--row.is-selected {
+  background: var(--white);
+  color: var(--black);
+  border-color: var(--red);
+  box-shadow: inset 0 0 0 1px var(--red);
+}
+
+.choice__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 1px;
+}
+
+.choice__text small {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.choice__note {
+  color: var(--red-deep) !important;
+}
+
+.choice__check {
+  color: var(--red);
+  font-size: 22px;
+}
+
+/* ---------- Counters on top of lists ---------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat {
+  background: var(--panel);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+}
+
+.stat__num {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.stat__num--red {
+  color: var(--red);
+}
+
+.stat__label {
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.3;
+}
+
+/* Floating "new" button on phones; the hero button covers wide screens. */
+.fab-new {
+  position: fixed;
+  right: 16px;
+  bottom: calc(88px + var(--ion-safe-area-bottom, 0px));
+  z-index: 20;
+  box-shadow: 0 8px 22px rgba(215, 20, 26, 0.35);
+}
+
+@media (min-width: 900px) {
+  .fab-new {
+    display: none;
+  }
 }

@@ -31,7 +31,7 @@ import { AddressSheetComponent } from './address-sheet.component';
         <ion-refresher-content />
       </ion-refresher>
 
-      <div class="page">
+      <div class="page page--wide">
         <app-hero
           title="Meus endereços"
           lede="Cadastre cada ponto de coleta e de entrega uma vez e use em qualquer frete."
@@ -53,7 +53,7 @@ import { AddressSheetComponent } from './address-sheet.component';
             </app-empty-state>
           }
 
-          <div class="stack">
+          <div class="grid-cards">
             @for (address of list; track address.id) {
               <article class="card stack">
                 <div class="row row--between">

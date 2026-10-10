@@ -42,6 +42,26 @@ const POLL_MS = 10_000;
     UtcPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    .detail {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 24px;
+    }
+
+    @media (min-width: 1000px) {
+      .detail {
+        grid-template-columns: minmax(0, 1fr) 400px;
+        gap: 40px;
+        align-items: start;
+      }
+
+      .detail__side {
+        position: sticky;
+        top: 16px;
+      }
+    }
+  `,
   template: `
     <app-page-bar title="Frete" backHref="/customer/freights" />
 
@@ -50,7 +70,7 @@ const POLL_MS = 10_000;
         <ion-refresher-content />
       </ion-refresher>
 
-      <div class="page page--with-bar">
+      <div class="page page--wide page--with-bar">
         <app-problem-alert [error]="load.error()" />
         <app-problem-alert [error]="action.error()" />
 
@@ -73,6 +93,8 @@ const POLL_MS = 10_000;
             }
           </section>
 
+          <div class="detail">
+            <div class="stack stack--lg detail__main">
           @if (delivery(); as d) {
             <section class="card card--accent stack">
               <h3>Frete aprovado</h3>
@@ -94,6 +116,8 @@ const POLL_MS = 10_000;
             <app-stops-route [stops]="stops()" />
           </section>
 
+            </div>
+            <div class="stack stack--lg detail__side">
           @if (f.status === 'Open') {
             <section class="stack">
               <h2>Propostas</h2>
@@ -140,6 +164,9 @@ const POLL_MS = 10_000;
               Cancelar frete
             </button>
           }
+
+            </div>
+          </div>
 
           <a class="link-btn" routerLink="/customer/freights">Voltar para meus fretes</a>
         } @else if (load.loading()) {

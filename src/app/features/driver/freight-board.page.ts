@@ -64,7 +64,7 @@ interface BoardItem {
         <ion-refresher-content />
       </ion-refresher>
 
-      <div class="page">
+      <div class="page page--wide">
         <app-hero
           title="Fretes abertos"
           lede="Só aparecem fretes que cabem nos seus veículos. Você define o preço."
@@ -84,7 +84,7 @@ interface BoardItem {
             </app-empty-state>
           }
 
-          <div class="stack stack--lg">
+          <div class="grid-cards">
             @for (item of list; track item.freight.id) {
               <article class="card stack">
                 <div class="row row--between row--wrap">

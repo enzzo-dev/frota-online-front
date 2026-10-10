@@ -21,3 +21,15 @@
   margin: 6px 0 0;
   padding-left: 18px;
 }
+
+/* Wide screens: the pitch on the left, the form on the right. */
+@media (min-width: 900px) {
+  .auth {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(360px, 440px);
+    gap: 48px;
+    align-items: center;
+    max-width: 1080px;
+    min-height: 100%;
+  }
+}

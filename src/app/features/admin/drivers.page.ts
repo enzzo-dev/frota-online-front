@@ -46,7 +46,7 @@ type ReviewFilter = Extract<DriverStatus, 'PendingReview' | 'Approved' | 'Reject
         <ion-refresher-content />
       </ion-refresher>
 
-      <div class="page">
+      <div class="page page--wide">
         <app-hero
           title="Análise de motoristas"
           lede="Confira CNH, veículos e documentos antes de liberar o motorista para enviar propostas."
@@ -64,7 +64,7 @@ type ReviewFilter = Extract<DriverStatus, 'PendingReview' | 'Approved' | 'Reject
           @if (list.length === 0 && !load.loading()) {
             <app-empty-state title="Ninguém nesta lista" description="Quando houver motoristas nesta etapa, eles aparecem aqui." />
           }
-          <div class="stack">
+          <div class="grid-cards">
             @for (driver of list; track driver.driverId) {
               <a class="card card--link stack" [routerLink]="['/admin/drivers', driver.driverId]">
                 <div class="row row--between row--wrap">

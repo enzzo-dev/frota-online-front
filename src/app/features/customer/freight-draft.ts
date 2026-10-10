@@ -1,13 +1,30 @@
 import { CreateFreightStopRequest, FreightItem, StopType } from '../../core/models';
 
+let localCounter = 0;
+
+/** A local id, only to track a row while editing. */
+export function newStopId(): string {
+  localCounter += 1;
+  return `stop-${Date.now().toString(36)}-${localCounter}`;
+}
+
 /** A stop the customer is composing, before the freight is published. */
 export interface DraftStop {
   /** Local id, only to track the row while editing. */
   readonly id: string;
   readonly type: StopType;
+  /** Empty until the customer picks an address for the stop. */
   readonly addressId: string;
   readonly note: string;
   readonly items: readonly FreightItem[];
+}
+
+/** The two stops every freight needs: where to pick up and where to deliver. Addresses are chosen later. */
+export function initialStops(): DraftStop[] {
+  return [
+    { id: newStopId(), type: 'Pickup', addressId: '', note: '', items: [] },
+    { id: newStopId(), type: 'Delivery', addressId: '', note: '', items: [] },
+  ];
 }
 
 /**
@@ -27,7 +44,10 @@ export function validateStops(stops: readonly DraftStop[]): string[] {
   if (stops[stops.length - 1]?.type !== 'Delivery') {
     problems.push('A última parada precisa ser uma entrega: é o endereço final.');
   }
-  const ids = stops.map((stop) => stop.addressId);
+  if (stops.some((stop) => stop.addressId === '')) {
+    problems.push('Escolha o endereço de todas as paradas.');
+  }
+  const ids = stops.map((stop) => stop.addressId).filter((id) => id !== '');
   if (new Set(ids).size !== ids.length) {
     problems.push('Cada endereço pode aparecer uma vez só.');
   }

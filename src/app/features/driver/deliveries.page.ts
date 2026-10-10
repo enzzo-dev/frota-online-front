@@ -37,7 +37,7 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
         <ion-refresher-content />
       </ion-refresher>
 
-      <div class="page">
+      <div class="page page--wide">
         <app-hero
           title="Minhas corridas"
           lede="Fretes que você ganhou. Abra uma corrida para ver as paradas com o endereço completo."
@@ -55,7 +55,7 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
             </app-empty-state>
           }
 
-          <div class="stack">
+          <div class="grid-cards">
             @for (delivery of list; track delivery.deliveryId) {
               <a class="card card--link stack" [routerLink]="['/driver/deliveries', delivery.deliveryId]">
                 <div class="row row--between">

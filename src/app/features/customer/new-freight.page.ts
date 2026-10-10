@@ -1,17 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import {
-  IonContent,
-  IonIcon,
-  IonInput,
-  IonSegment,
-  IonSegmentButton,
-  IonSelect,
-  IonSelectOption,
-  IonSpinner,
-  ModalController,
-} from '@ionic/angular';
+import { IonContent, IonFooter, IonIcon, IonInput, IonSpinner } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { AddressesService } from '../../core/api/addresses.service';
 import { FreightsService } from '../../core/api/freights.service';
@@ -19,16 +9,33 @@ import { Address, VEHICLE_TYPES, VehicleType } from '../../core/models';
 import { VEHICLE_TYPE_LABEL } from '../../core/ui/labels';
 import { createRequestState } from '../../core/ui/request-state';
 import { ToastService } from '../../core/ui/toast.service';
+import { areaLine, streetLine } from '../../core/util/address-format';
 import { localInputToUtcIso } from '../../core/util/dates';
 import { parseDecimal } from '../../core/util/normalizers';
+import { StopView } from '../../core/util/stop-views';
 import { PageBarComponent } from '../../shared/components/page-bar.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
 import { greaterThan, notBlank } from '../../shared/forms/validators';
-import { AddressSheetComponent } from './address-sheet.component';
-import { DraftStop, toRequestStops, validateStops } from './freight-draft';
-import { StopBuilderComponent } from './stop-builder.component';
+import { DraftStop, initialStops, toRequestStops, validateStops } from './freight-draft';
+import { FreightSummary, FreightSummaryComponent, SummarySection } from './freight-summary.component';
+import { RoutePlannerComponent } from './route-planner.component';
 
 type Timing = 'today' | 'scheduled';
+
+interface WizardStep {
+  readonly label: string;
+  readonly title: string;
+  readonly help: string;
+}
+
+const STEPS: readonly WizardStep[] = [
+  { label: 'Rota', title: 'Para onde vai o frete?', help: 'Escolha onde coletar e onde entregar. Se houver mais paradas no caminho, adicione.' },
+  { label: 'Carga', title: 'O que vai ser transportado?', help: 'Os motoristas só veem fretes que cabem no veículo deles.' },
+  { label: 'Coleta', title: 'Quando coletar?', help: 'Isso define por quanto tempo os motoristas podem enviar propostas.' },
+  { label: 'Revisar', title: 'Confira e publique', help: 'Depois de publicar, os motoristas compatíveis já podem enviar preços.' },
+];
+
+const LAST_STEP = STEPS.length - 1;
 
 /** `YYYY-MM-DDTHH:mm` in local time, the format `datetime-local` inputs use. */
 function localInputValue(date: Date): string {
@@ -37,8 +44,8 @@ function localInputValue(date: Date): string {
 }
 
 /**
- * Posts a freight in four steps: addresses, stops in order, cargo, publish.
- * Without a date the freight is for today and takes proposals for 5 minutes; a scheduled one for up to 24 hours.
+ * Requests a freight one question at a time: route, cargo, when, then a review. On wide screens a live
+ * summary stays beside the form. Same-day freights take proposals for 5 minutes; scheduled ones for up to 24 hours.
  */
 @Component({
   selector: 'app-new-freight-page',
@@ -46,16 +53,14 @@ function localInputValue(date: Date): string {
     ReactiveFormsModule,
     RouterLink,
     IonContent,
+    IonFooter,
     IonIcon,
     IonInput,
-    IonSegment,
-    IonSegmentButton,
-    IonSelect,
-    IonSelectOption,
     IonSpinner,
+    FreightSummaryComponent,
     PageBarComponent,
     ProblemAlertComponent,
-    StopBuilderComponent,
+    RoutePlannerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './new-freight.page.scss',
@@ -63,92 +68,134 @@ function localInputValue(date: Date): string {
     <app-page-bar title="Novo frete" backHref="/customer/freights" />
 
     <ion-content>
-      <div class="page page--with-bar">
-        <p class="lede">
-          Monte a rota na ordem em que o motorista vai seguir. Os motoristas aprovados enviam o preço deles
-          e você escolhe.
-        </p>
-
-        <app-problem-alert [error]="addressesRequest.error()" />
-
-        <ol class="route">
-          <li class="stop" [class.stop--done]="addresses().length >= 2">
-            <span class="stop-pin" aria-hidden="true">1</span>
-            <div class="stop-body stack">
-              <h3>Endereços</h3>
-              <p class="small">
-                {{ addresses().length === 0 ? 'Nenhum endereço salvo ainda.' : addresses().length + ' salvo(s).' }}
-                Você precisa de uma coleta e uma entrega.
-              </p>
-              <div class="form-actions">
-                <button class="btn btn--ghost btn--sm" type="button" (click)="openAddressSheet()">
-                  <ion-icon name="add-outline" aria-hidden="true" /> Novo endereço
-                </button>
-              </div>
-            </div>
-          </li>
-
-          <li class="stop" [class.stop--done]="stopsValid()">
-            <span class="stop-pin" aria-hidden="true">2</span>
-            <div class="stop-body stack">
-              <h3>Paradas</h3>
-              <p class="small">A primeira é uma coleta e a última, uma entrega: o endereço final. Use as setas para reordenar.</p>
-              <app-stop-builder [addresses]="addresses()" [(stops)]="stops" (addAddress)="openAddressSheet()" />
-              @if (stops().length > 0 && stopProblems().length > 0) {
-                <div class="notice notice--error" role="status">
-                  <ul>
-                    @for (problem of stopProblems(); track problem) {
-                      <li>{{ problem }}</li>
+      <div class="page page--wide page--with-bar">
+        <nav class="stepper" aria-label="Etapas do pedido">
+          <div class="progress" role="progressbar" aria-valuemin="1" [attr.aria-valuemax]="steps.length" [attr.aria-valuenow]="step() + 1">
+            <span [style.width.%]="((step() + 1) / steps.length) * 100"></span>
+          </div>
+          <ol class="stepper__list">
+            @for (item of steps; track item.label; let i = $index) {
+              <li>
+                <button
+                  type="button"
+                  class="stepper__dot"
+                  [class.is-current]="i === step()"
+                  [class.is-done]="i < step()"
+                  [disabled]="i > reached()"
+                  [attr.aria-current]="i === step() ? 'step' : null"
+                  (click)="go(i)"
+                >
+                  <span class="stepper__num">
+                    @if (i < step()) {
+                      <ion-icon name="checkmark-outline" aria-hidden="true" />
+                    } @else {
+                      {{ i + 1 }}
                     }
-                  </ul>
-                </div>
-              }
-            </div>
-          </li>
+                  </span>
+                  <span class="stepper__label">{{ item.label }}</span>
+                </button>
+              </li>
+            }
+          </ol>
+        </nav>
 
-          <li class="stop" [class.stop--done]="cargoForm.valid">
-            <span class="stop-pin" aria-hidden="true">3</span>
-            <div class="stop-body stack">
-              <h3>Carga</h3>
-              <form class="stack" [formGroup]="cargoForm" novalidate>
-                <ion-input
-                  formControlName="cargoDescription"
-                  label="O que será transportado"
-                  labelPlacement="stacked"
-                  fill="outline"
-                  placeholder="Autopeças, móveis, caixas..."
-                  errorText="Descreva a carga"
-                />
-                <div class="form-grid form-grid--2">
+        <div class="wizard" [class.wizard--review]="step() === lastStep">
+          <section class="wizard__main stack stack--lg">
+            <header class="stack">
+              <p class="eyebrow">Passo {{ step() + 1 }} de {{ steps.length }}</p>
+              <h1 class="wizard__title">{{ current().title }}</h1>
+              <p class="lede">{{ current().help }}</p>
+            </header>
+
+            @switch (step()) {
+              @case (0) {
+                <app-problem-alert [error]="addressesRequest.error()" />
+                <app-route-planner [addresses]="addresses()" [(stops)]="stops" (addressSaved)="onAddressSaved($event)" />
+                @if (tried() && stopProblems().length > 0) {
+                  <div class="notice notice--error" role="alert">
+                    <ul>
+                      @for (problem of stopProblems(); track problem) {
+                        <li>{{ problem }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
+              }
+
+              @case (1) {
+                <form class="stack stack--lg" [formGroup]="cargoForm" (ngSubmit)="next()" novalidate>
+                  <ion-input
+                    formControlName="cargoDescription"
+                    label="O que será transportado"
+                    labelPlacement="stacked"
+                    fill="outline"
+                    placeholder="Autopeças, móveis, caixas..."
+                    enterkeyhint="next"
+                    errorText="Descreva a carga"
+                  />
                   <ion-input
                     formControlName="cargoWeightKg"
-                    label="Peso total (kg)"
+                    label="Peso total"
                     labelPlacement="stacked"
                     fill="outline"
                     inputmode="decimal"
-                    errorText="Informe o peso em kg"
-                  />
-                  <ion-select
-                    formControlName="requiredVehicleType"
-                    label="Veículo necessário"
-                    labelPlacement="stacked"
-                    fill="outline"
-                    interface="action-sheet"
-                    cancelText="Cancelar"
+                    placeholder="Ex.: 250"
+                    enterkeyhint="done"
+                    helperText="Some o peso de todos os itens, em quilos."
+                    errorText="Informe um peso maior que zero"
                   >
-                    @for (type of vehicleTypes; track type) {
-                      <ion-select-option [value]="type">{{ vehicleLabel[type] }}</ion-select-option>
-                    }
-                  </ion-select>
-                </div>
-              </form>
+                    <span slot="end" class="unit">kg</span>
+                  </ion-input>
 
-              <div class="stack">
-                <strong class="small">Quando coletar</strong>
-                <ion-segment [value]="timing()" (ionChange)="onTiming($event.detail.value)">
-                  <ion-segment-button value="today">Hoje</ion-segment-button>
-                  <ion-segment-button value="scheduled">Agendar</ion-segment-button>
-                </ion-segment>
+                  <fieldset class="field-set">
+                    <legend>Tipo de veículo</legend>
+                    <div class="choice-grid" role="radiogroup" aria-label="Tipo de veículo">
+                      @for (type of vehicleTypes; track type) {
+                        <button
+                          class="choice"
+                          type="button"
+                          role="radio"
+                          [attr.aria-checked]="cargoForm.controls.requiredVehicleType.value === type"
+                          [class.is-selected]="cargoForm.controls.requiredVehicleType.value === type"
+                          (click)="cargoForm.controls.requiredVehicleType.setValue(type)"
+                        >
+                          {{ vehicleLabel[type] }}
+                        </button>
+                      }
+                    </div>
+                    <p class="field-hint">Escolha o menor veículo que comporta a carga.</p>
+                  </fieldset>
+                </form>
+              }
+
+              @case (2) {
+                <div class="choice-grid choice-grid--wide" role="radiogroup" aria-label="Quando coletar">
+                  <button
+                    class="choice choice--card"
+                    type="button"
+                    role="radio"
+                    [attr.aria-checked]="timing() === 'today'"
+                    [class.is-selected]="timing() === 'today'"
+                    (click)="timing.set('today')"
+                  >
+                    <ion-icon name="flash-outline" aria-hidden="true" />
+                    <strong>Hoje, o quanto antes</strong>
+                    <small>Os motoristas têm 5 minutos para enviar propostas.</small>
+                  </button>
+                  <button
+                    class="choice choice--card"
+                    type="button"
+                    role="radio"
+                    [attr.aria-checked]="timing() === 'scheduled'"
+                    [class.is-selected]="timing() === 'scheduled'"
+                    (click)="timing.set('scheduled')"
+                  >
+                    <ion-icon name="calendar-outline" aria-hidden="true" />
+                    <strong>Agendar data e hora</strong>
+                    <small>Os motoristas têm até 24 horas para enviar propostas.</small>
+                  </button>
+                </div>
+
                 @if (timing() === 'scheduled') {
                   <ion-input
                     type="datetime-local"
@@ -159,56 +206,82 @@ function localInputValue(date: Date): string {
                     [value]="scheduledAt()"
                     (ionInput)="onScheduled($event.detail.value)"
                   />
-                  @if (scheduleProblem(); as problem) {
-                    <p class="field-hint" role="status">{{ problem }}</p>
+                  @if (tried() && scheduleProblem(); as problem) {
+                    <div class="notice notice--error" role="alert">{{ problem }}</div>
                   }
                 }
-              </div>
-            </div>
-          </li>
+              }
 
-          <li class="stop">
-            <span class="stop-pin" aria-hidden="true">4</span>
-            <div class="stop-body stack">
-              <h3>Publicar</h3>
-              <p class="small">{{ windowText() }}</p>
+              @case (3) {
+                <app-freight-summary [summary]="summary()" [editable]="true" (edit)="go($event)" />
 
-              <app-problem-alert [error]="publishRequest.error()">
-                @if (publishRequest.error()?.code === 'freight.terms_not_accepted') {
-                  <p><a class="link-btn" routerLink="/terms">Ler e aceitar os termos</a></p>
-                }
-              </app-problem-alert>
-
-              <div class="form-actions">
-                <button class="btn" type="button" [disabled]="publishRequest.loading()" (click)="publish()">
-                  @if (publishRequest.loading()) {
-                    <ion-spinner name="crescent" />
+                <app-problem-alert [error]="publishRequest.error()">
+                  @if (publishRequest.error()?.code === 'freight.terms_not_accepted') {
+                    <p><a class="link-btn" routerLink="/terms">Ler e aceitar os termos</a></p>
                   }
-                  Publicar frete
-                </button>
+                </app-problem-alert>
+              }
+            }
+          </section>
+
+          @if (step() < lastStep) {
+            <aside class="wizard__aside" aria-label="Resumo do pedido">
+              <div class="panel stack stack--lg">
+                <h2 class="aside__title">Seu pedido</h2>
+                <app-freight-summary [summary]="summary()" />
               </div>
-            </div>
-          </li>
-        </ol>
+            </aside>
+          }
+        </div>
       </div>
     </ion-content>
+
+    <ion-footer class="wizard-footer">
+      <div class="wizard-footer__inner">
+        @if (step() === 0) {
+          <a class="btn btn--ghost" routerLink="/customer/freights">Cancelar</a>
+        } @else {
+          <button class="btn btn--ghost" type="button" [disabled]="publishRequest.loading()" (click)="back()">Voltar</button>
+        }
+
+        @if (step() < lastStep) {
+          <button class="btn" type="button" (click)="next()">
+            Continuar <ion-icon name="chevron-forward-outline" aria-hidden="true" />
+          </button>
+        } @else {
+          <button class="btn" type="button" [disabled]="publishRequest.loading()" (click)="publish()">
+            @if (publishRequest.loading()) {
+              <ion-spinner name="crescent" />
+            }
+            Publicar frete
+          </button>
+        }
+      </div>
+    </ion-footer>
   `,
 })
 export class NewFreightPage {
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly addressesApi = inject(AddressesService);
   private readonly freights = inject(FreightsService);
-  private readonly modals = inject(ModalController);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
+  protected readonly steps = STEPS;
+  protected readonly lastStep = LAST_STEP;
   protected readonly vehicleTypes = VEHICLE_TYPES;
   protected readonly vehicleLabel = VEHICLE_TYPE_LABEL;
   protected readonly addressesRequest = createRequestState();
   protected readonly publishRequest = createRequestState();
 
+  protected readonly step = signal(0);
+  /** The furthest step the customer has reached, so earlier ones can be revisited from the stepper. */
+  protected readonly reached = signal(0);
+  /** Set after "Continuar" on an incomplete step, so errors appear only once the customer tried to move on. */
+  protected readonly tried = signal(false);
+
   protected readonly addresses = signal<readonly Address[]>([]);
-  protected readonly stops = signal<readonly DraftStop[]>([]);
+  protected readonly stops = signal<readonly DraftStop[]>(initialStops());
   protected readonly timing = signal<Timing>('today');
   protected readonly scheduledAt = signal('');
   protected readonly minScheduled = localInputValue(new Date());
@@ -219,8 +292,8 @@ export class NewFreightPage {
     requiredVehicleType: ['Fiorino' as VehicleType, [Validators.required]],
   });
 
+  protected readonly current = computed(() => STEPS[this.step()] ?? STEPS[0]!);
   protected readonly stopProblems = computed(() => validateStops(this.stops()));
-  protected readonly stopsValid = computed(() => this.stops().length > 0 && this.stopProblems().length === 0);
 
   protected readonly scheduleProblem = computed(() => {
     if (this.timing() !== 'scheduled') {
@@ -233,46 +306,91 @@ export class NewFreightPage {
     return new Date(value).getTime() > Date.now() ? null : 'A coleta agendada precisa ser no futuro.';
   });
 
-  protected readonly windowText = computed(() =>
-    this.timing() === 'today'
-      ? 'Frete para hoje: os motoristas têm 5 minutos para enviar propostas depois que você publicar.'
-      : 'Frete agendado: os motoristas têm até 24 horas para enviar propostas.',
-  );
+  private readonly formTick = signal(0);
+
+  protected readonly summary = computed<FreightSummary>(() => {
+    this.formTick();
+    const cargo = this.cargoForm.getRawValue();
+    const weight = parseDecimal(cargo.cargoWeightKg);
+    const byId = new Map(this.addresses().map((address) => [address.id, address] as const));
+    const stops: StopView[] = this.stops()
+      .map((stop, index) => ({ stop, index, address: byId.get(stop.addressId) }))
+      .filter((entry): entry is { stop: DraftStop; index: number; address: Address } => entry.address !== undefined)
+      .map(({ stop, index, address }) => ({
+        sequence: index + 1,
+        type: stop.type,
+        title: `${address.label} · ${streetLine(address)}`,
+        subtitle: areaLine(address),
+        note: stop.note.trim() || null,
+        items: stop.items,
+        done: false,
+      }));
+    const scheduled = this.timing() === 'scheduled' && this.scheduledAt() !== '';
+    return {
+      stops,
+      cargo: cargo.cargoDescription.trim(),
+      weightText: weight ? `${weight.toLocaleString('pt-BR')} kg` : '',
+      vehicle: VEHICLE_TYPE_LABEL[cargo.requiredVehicleType],
+      whenText: this.timing() === 'today' ? 'Hoje, o quanto antes' : scheduled ? this.formatWhen(this.scheduledAt()) : 'Agendado (escolha a data)',
+      windowText:
+        this.timing() === 'today'
+          ? 'Os motoristas têm 5 minutos para enviar propostas depois que você publicar.'
+          : 'Os motoristas têm até 24 horas para enviar propostas.',
+    };
+  });
+
+  constructor() {
+    // The summary reads the reactive form, which is not a signal: nudge it when the form changes.
+    this.cargoForm.valueChanges.subscribe(() => this.formTick.update((n) => n + 1));
+  }
 
   ionViewWillEnter(): void {
     void this.loadAddresses();
-  }
-
-  protected onTiming(value: string | number | null | undefined): void {
-    if (value === 'today' || value === 'scheduled') {
-      this.timing.set(value);
-    }
   }
 
   protected onScheduled(value: string | number | null | undefined): void {
     this.scheduledAt.set(typeof value === 'string' ? value : '');
   }
 
-  protected async openAddressSheet(): Promise<void> {
-    const sheet = await this.modals.create({
-      component: AddressSheetComponent,
-      breakpoints: [0, 0.95],
-      initialBreakpoint: 0.95,
-      cssClass: 'sheet',
-    });
-    await sheet.present();
-    const { role } = await sheet.onDidDismiss();
-    if (role === 'created') {
-      await this.toast.show('Endereço salvo.');
-      await this.loadAddresses();
+  protected onAddressSaved(address: Address): void {
+    this.addresses.update((list) => (list.some((item) => item.id === address.id) ? list : [...list, address]));
+  }
+
+  protected go(index: number | SummarySection): void {
+    if (index <= this.reached()) {
+      this.step.set(index);
+      this.tried.set(false);
     }
   }
 
-  protected async publish(): Promise<void> {
-    this.cargoForm.markAllAsTouched();
-    if (this.cargoForm.invalid || !this.stopsValid() || this.scheduleProblem()) {
-      await this.toast.show('Revise os passos marcados antes de publicar.');
+  protected back(): void {
+    this.go(Math.max(0, this.step() - 1));
+  }
+
+  protected next(): void {
+    if (!this.stepValid(this.step())) {
+      this.tried.set(true);
+      if (this.step() === 1) {
+        this.cargoForm.markAllAsTouched();
+      }
       return;
+    }
+    const target = Math.min(LAST_STEP, this.step() + 1);
+    this.reached.update((value) => Math.max(value, target));
+    this.step.set(target);
+    this.tried.set(false);
+  }
+
+  protected async publish(): Promise<void> {
+    // If an earlier step became invalid, send the customer back to it instead of failing silently.
+    for (let index = 0; index < LAST_STEP; index += 1) {
+      if (!this.stepValid(index)) {
+        this.step.set(index);
+        this.tried.set(true);
+        this.cargoForm.markAllAsTouched();
+        await this.toast.show('Falta completar este passo antes de publicar.');
+        return;
+      }
     }
     const cargo = this.cargoForm.getRawValue();
     const freight = await this.publishRequest.run(() =>
@@ -293,10 +411,33 @@ export class NewFreightPage {
     }
   }
 
+  private stepValid(index: number): boolean {
+    switch (index) {
+      case 0:
+        return this.stopProblems().length === 0;
+      case 1:
+        return this.cargoForm.valid;
+      case 2:
+        return this.scheduleProblem() === null;
+      default:
+        return true;
+    }
+  }
+
+  private formatWhen(local: string): string {
+    const date = new Date(local);
+    return Number.isNaN(date.getTime())
+      ? local
+      : date.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  }
+
   private resetDraft(): void {
-    this.stops.set([]);
+    this.stops.set(initialStops());
     this.timing.set('today');
     this.scheduledAt.set('');
+    this.step.set(0);
+    this.reached.set(0);
+    this.tried.set(false);
     this.cargoForm.reset({ cargoDescription: '', cargoWeightKg: '', requiredVehicleType: 'Fiorino' });
   }
 

@@ -1,7 +1,186 @@
-.stop-body h3 {
-  font-size: 17px;
+.eyebrow {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--red);
+  text-transform: uppercase;
 }
 
-.notice ul {
+.wizard__title {
+  font-size: clamp(26px, 6vw, 36px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.unit {
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.aside__title {
+  font-size: 18px;
+}
+
+/* ---------- Stepper ---------- */
+.stepper {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stepper__list {
+  list-style: none;
   margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.stepper__dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink-mute);
+  cursor: pointer;
+}
+
+.stepper__dot:disabled {
+  cursor: default;
+}
+
+.stepper__num {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--field-line);
+  background: var(--white);
+  font-family: var(--font-display);
+  font-size: 13px;
+}
+
+.stepper__dot.is-current {
+  color: var(--black);
+}
+
+.stepper__dot.is-current .stepper__num {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--white);
+}
+
+.stepper__dot.is-done {
+  color: var(--black);
+}
+
+.stepper__dot.is-done .stepper__num {
+  background: var(--black);
+  border-color: var(--black);
+  color: var(--white);
+}
+
+/* On phones only the current step shows its name. */
+.stepper__label {
+  display: none;
+}
+
+.stepper__dot.is-current .stepper__label {
+  display: inline;
+}
+
+/* ---------- Layout ---------- */
+.wizard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+
+.wizard__aside {
+  display: none;
+}
+
+.field-set {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.field-set legend {
+  padding: 0;
+  margin-bottom: 10px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+@media (min-width: 720px) {
+  .stepper__label {
+    display: inline;
+  }
+}
+
+@media (min-width: 1000px) {
+  .wizard {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 40px;
+    align-items: start;
+  }
+
+  .wizard--review {
+    grid-template-columns: minmax(0, 720px);
+    justify-content: center;
+  }
+
+  .wizard__aside {
+    display: block;
+    position: sticky;
+    top: 16px;
+  }
+}
+
+/* ---------- Footer: the action is always within reach of the thumb ---------- */
+.wizard-footer {
+  background: var(--white);
+  box-shadow: 0 -1px 0 var(--line);
+}
+
+.wizard-footer::before {
+  display: none;
+}
+
+.wizard-footer__inner {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 12px 16px calc(12px + var(--ion-safe-area-bottom, 0px));
+}
+
+.wizard-footer__inner .btn {
+  flex: 1;
+}
+
+@media (min-width: 720px) {
+  .wizard-footer__inner {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .wizard-footer__inner .btn {
+    flex: 0 0 auto;
+    min-width: 180px;
+  }
 }

@@ -1,0 +1,62 @@
+/* Design tokens, taken from the API guide (docs/docs.css) and mapped to Ionic variables. */
+:root {
+  --black: #000000;
+  --white: #ffffff;
+  --red: #d7141a;
+  --red-deep: #8f0d12;
+  --panel: #f3f3f4;
+  --line: #e4e4e7;
+  --ink-soft: #62626b;
+  --ink-mute: #8a8a93;
+  --field-line: #cfcfd4;
+
+  --gap: 16px;
+  --r-sm: 12px;
+  --r-md: 20px;
+  --r-lg: 32px;
+  --rail-w: 272px;
+
+  --font-display: 'Sora Variable', 'Sora', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Manrope Variable', 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo,
+    Consolas, monospace;
+
+  /* Ionic */
+  --ion-font-family: var(--font-body);
+  --ion-background-color: #ffffff;
+  --ion-background-color-rgb: 255, 255, 255;
+  --ion-text-color: #000000;
+  --ion-text-color-rgb: 0, 0, 0;
+
+  --ion-color-primary: #d7141a;
+  --ion-color-primary-rgb: 215, 20, 26;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #bd1217;
+  --ion-color-primary-tint: #db2c32;
+
+  --ion-color-dark: #000000;
+  --ion-color-dark-rgb: 0, 0, 0;
+  --ion-color-dark-contrast: #ffffff;
+  --ion-color-dark-contrast-rgb: 255, 255, 255;
+  --ion-color-dark-shade: #000000;
+  --ion-color-dark-tint: #1a1a1a;
+}
+
+.ion-color-primary {
+  --ion-color-base: var(--ion-color-primary);
+  --ion-color-base-rgb: var(--ion-color-primary-rgb);
+  --ion-color-contrast: var(--ion-color-primary-contrast);
+  --ion-color-contrast-rgb: var(--ion-color-primary-contrast-rgb);
+  --ion-color-shade: var(--ion-color-primary-shade);
+  --ion-color-tint: var(--ion-color-primary-tint);
+}
+
+.ion-color-dark {
+  --ion-color-base: var(--ion-color-dark);
+  --ion-color-base-rgb: var(--ion-color-dark-rgb);
+  --ion-color-contrast: var(--ion-color-dark-contrast);
+  --ion-color-contrast-rgb: var(--ion-color-dark-contrast-rgb);
+  --ion-color-shade: var(--ion-color-dark-shade);
+  --ion-color-tint: var(--ion-color-dark-tint);
+}

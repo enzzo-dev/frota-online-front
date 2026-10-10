@@ -1,0 +1,182 @@
+/* Ionic components restyled to the Frota Online look. */
+
+ion-content {
+  --background: var(--white);
+}
+
+/* Fields: outlined, rounded, red focus ring (docs: input:focus) */
+ion-input,
+ion-textarea,
+ion-select {
+  --border-radius: var(--r-sm);
+  --border-color: var(--field-line);
+  --border-width: 1.5px;
+  --highlight-color-focused: var(--red);
+  --highlight-color-valid: var(--field-line);
+  --highlight-color-invalid: var(--red);
+  --padding-start: 14px;
+  --padding-end: 14px;
+  --color: var(--black);
+  --placeholder-color: var(--ink-mute);
+  --placeholder-opacity: 1;
+  font-weight: 500;
+  font-size: 16px;
+}
+
+ion-input.ion-touched.ion-invalid,
+ion-textarea.ion-touched.ion-invalid,
+ion-select.ion-touched.ion-invalid {
+  --border-color: var(--red);
+}
+
+ion-input .input-bottom .error-text,
+ion-textarea .input-bottom .error-text {
+  color: var(--red-deep);
+}
+
+ion-checkbox {
+  --checkbox-background-checked: var(--red);
+  --border-color-checked: var(--red);
+  --size: 22px;
+  --border-radius: 7px;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+/* Segment: pill tabs (docs: .flow-tab) */
+ion-segment {
+  --background: transparent;
+  gap: 8px;
+  min-height: 0;
+  overflow-x: auto;
+  justify-content: flex-start;
+  scrollbar-width: none;
+}
+
+ion-segment::-webkit-scrollbar {
+  display: none;
+}
+
+ion-segment-button {
+  --background: var(--white);
+  --background-checked: var(--black);
+  --background-hover: var(--white);
+  --background-focused: var(--white);
+  --color: var(--black);
+  --color-checked: var(--white);
+  --color-focused: var(--black);
+  --indicator-color: transparent;
+  --indicator-box-shadow: none;
+  --border-radius: 999px;
+  --border-color: var(--field-line);
+  --border-style: solid;
+  --border-width: 1.5px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  min-width: max-content;
+  min-height: 38px;
+  flex: 0 0 auto;
+  text-transform: none;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0;
+}
+
+ion-segment-button.segment-button-checked {
+  --border-color: var(--black);
+}
+
+ion-segment-button::part(indicator-background) {
+  background: transparent;
+}
+
+ion-refresher {
+  --color: var(--red);
+}
+
+ion-spinner {
+  color: currentColor;
+}
+
+/* Toasts */
+ion-toast {
+  --background: var(--black);
+  --color: var(--white);
+  --border-radius: 999px;
+  --box-shadow: none;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+ion-toast.toast--error {
+  --background: var(--red-deep);
+}
+
+/* Alerts */
+ion-alert {
+  --background: var(--white);
+  --border-radius: var(--r-md);
+  --backdrop-opacity: 0.55;
+  font-family: var(--font-body);
+}
+
+ion-alert .alert-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+ion-alert .alert-button {
+  font-weight: 700;
+  color: var(--black);
+}
+
+ion-alert .alert-button.alert-button--danger,
+ion-alert .alert-button.alert-button-role-destructive {
+  color: var(--red);
+}
+
+/* Sheet modals */
+ion-modal.sheet {
+  --border-radius: 28px 28px 0 0;
+  --background: var(--white);
+  --backdrop-opacity: 0.55;
+}
+
+ion-modal.sheet::part(handle) {
+  background: var(--field-line);
+  width: 44px;
+  height: 5px;
+}
+
+/* Back bar */
+ion-toolbar.plain {
+  --background: transparent;
+  --border-width: 0;
+  --color: var(--black);
+  --min-height: 52px;
+}
+
+ion-toolbar.plain ion-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+}
+
+ion-header.plain-header::after {
+  display: none;
+}
+
+ion-back-button {
+  --color: var(--black);
+  --icon-padding-end: 4px;
+  font-weight: 700;
+}
+
+/* The floating label of an outlined field sits on its top border; give it room above. */
+ion-input[fill='outline'],
+ion-select[fill='outline'],
+ion-textarea[fill='outline'] {
+  margin-top: 8px;
+}

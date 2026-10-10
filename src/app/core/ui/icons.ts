@@ -1,0 +1,51 @@
+import { addIcons } from 'ionicons';
+import {
+  alertCircleOutline,
+  arrowBackOutline,
+  arrowDownOutline,
+  arrowUpOutline,
+  addOutline,
+  checkmarkCircleOutline,
+  checkmarkOutline,
+  closeOutline,
+  cubeOutline,
+  documentTextOutline,
+  idCardOutline,
+  locationOutline,
+  logOutOutline,
+  mapOutline,
+  navigateOutline,
+  peopleOutline,
+  personCircleOutline,
+  pricetagOutline,
+  refreshOutline,
+  timeOutline,
+  trashOutline,
+} from 'ionicons/icons';
+
+/** Registers every icon the app uses by name, once, at start-up. */
+export function registerIcons(): void {
+  addIcons({
+    'alert-circle-outline': alertCircleOutline,
+    'arrow-back-outline': arrowBackOutline,
+    'arrow-down-outline': arrowDownOutline,
+    'arrow-up-outline': arrowUpOutline,
+    'add-outline': addOutline,
+    'checkmark-circle-outline': checkmarkCircleOutline,
+    'checkmark-outline': checkmarkOutline,
+    'close-outline': closeOutline,
+    'cube-outline': cubeOutline,
+    'document-text-outline': documentTextOutline,
+    'id-card-outline': idCardOutline,
+    'location-outline': locationOutline,
+    'log-out-outline': logOutOutline,
+    'map-outline': mapOutline,
+    'navigate-outline': navigateOutline,
+    'people-outline': peopleOutline,
+    'person-circle-outline': personCircleOutline,
+    'pricetag-outline': pricetagOutline,
+    'refresh-outline': refreshOutline,
+    'time-outline': timeOutline,
+    'trash-outline': trashOutline,
+  });
+}

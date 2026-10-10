@@ -1,0 +1,140 @@
+/* Phones: a floating black pill at the bottom. The active tab turns into a white pill. */
+ion-tab-bar.dock {
+  --background: var(--black);
+  --border: 0;
+  --color: #d6d6da;
+  --color-selected: var(--black);
+  height: 64px;
+  margin: 0 12px calc(12px + var(--ion-safe-area-bottom, 0px));
+  padding: 6px;
+  border-radius: 999px;
+  contain: none;
+  gap: 4px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
+}
+
+ion-tab-button {
+  --padding-top: 0;
+  --padding-bottom: 0;
+  --background-focused: transparent;
+  --background-focused-opacity: 0;
+  --ripple-color: var(--white);
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+  border-radius: 999px;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+ion-tab-button.tab-selected {
+  background: var(--white);
+  font-weight: 700;
+}
+
+ion-tab-button ion-icon {
+  font-size: 21px;
+  margin-bottom: 1px;
+}
+
+ion-tab-button ion-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.dock__brand,
+.dock__session {
+  display: none;
+}
+
+/* Wide screens: the floating rail from the API guide. */
+@media (min-width: 900px) {
+  ion-tabs {
+    padding-left: calc(var(--rail-w) + 32px);
+  }
+
+  ion-tab-bar.dock {
+    position: fixed;
+    top: 16px;
+    bottom: 16px;
+    left: 16px;
+    width: var(--rail-w);
+    height: auto;
+    margin: 0;
+    padding: 26px 20px;
+    border-radius: var(--r-lg);
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    gap: 4px;
+    box-shadow: none;
+    overflow-y: auto;
+  }
+
+  .dock__brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 22px;
+    padding: 0 6px;
+    color: var(--white);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: -0.01em;
+  }
+
+  ion-tab-button {
+    flex: none;
+    height: 44px;
+    width: 100%;
+  }
+
+  ion-tab-button::part(native) {
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 0 16px;
+  }
+
+  ion-tab-button ion-icon {
+    margin: 0;
+  }
+
+  ion-tab-button ion-label {
+    font-size: 15px;
+  }
+
+  .dock__session {
+    display: block;
+    margin-top: auto;
+    padding: 16px;
+    border: 1px solid #26262a;
+    border-radius: var(--r-md);
+    background: #131315;
+    color: var(--white);
+  }
+
+  .dock__session-title {
+    margin: 0 0 6px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 13px;
+    color: #b9b9c0;
+  }
+
+  .dock__session-name {
+    margin: 0;
+    font-weight: 700;
+    word-break: break-word;
+  }
+
+  .dock__session-sub {
+    margin: 4px 0 0;
+    font-size: 13px;
+    color: #a4a4ac;
+  }
+}

@@ -2,18 +2,35 @@
   display: block;
 }
 
-.auth {
-  min-height: 100%;
-  justify-content: center;
-  gap: 20px;
+ion-content {
+  --background: #050507;
 }
 
+/* ---------- Glass panel ---------- */
 .auth__form {
-  background: var(--white);
-  border: 1.5px solid var(--line);
-  border-radius: var(--r-md);
-  padding: 22px 18px;
-  gap: 16px;
+  position: relative;
+  gap: 18px;
+  padding: 24px 20px;
+  border-radius: 28px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: #fff;
+  overflow: hidden;
+}
+
+/* A thin red light running around the top edge. */
+.auth__form::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -40%;
+  width: 40%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ff3b41, transparent);
+  animation: edge 4.5s ease-in-out infinite;
 }
 
 .auth__head {
@@ -23,16 +40,17 @@
 }
 
 .auth__head h2 {
-  font-family: var(--font-display);
-  font-size: 22px;
-  letter-spacing: -0.01em;
   margin: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  letter-spacing: -0.02em;
+  color: #fff;
 }
 
 .auth__head p {
   margin: 0;
-  color: var(--ink-soft);
   font-size: 14px;
+  color: #b4b4bd;
 }
 
 .auth__fields {
@@ -41,44 +59,101 @@
   gap: 18px;
 }
 
+/* ---------- Fields on dark ---------- */
+ion-input {
+  --color: #fff;
+  --background: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.22);
+  --border-radius: 14px;
+  --placeholder-color: #8a8a93;
+  --highlight-color-focused: #ff3b41;
+  --highlight-color-valid: rgba(255, 255, 255, 0.22);
+  --highlight-color-invalid: #ff6b70;
+  color: #d9d9df;
+  transition: transform 0.2s ease, box-shadow 0.25s ease;
+  border-radius: 14px;
+}
+
+ion-input.has-focus,
+ion-input:focus-within {
+  --border-color: #ff3b41;
+  box-shadow: 0 0 0 4px rgba(215, 20, 26, 0.22), 0 0 28px rgba(215, 20, 26, 0.25);
+}
+
+ion-input.ion-touched.ion-invalid {
+  --border-color: #ff6b70;
+}
+
+ion-input ion-input-password-toggle {
+  color: #ff3b41;
+}
+
+.auth__form ::ng-deep .input-bottom .error-text,
+.auth__form ::ng-deep .input-bottom .helper-text {
+  color: #ff8a8e;
+}
+
+.auth__form ::ng-deep .input-bottom .helper-text {
+  color: #8f8f99;
+}
+
+/* ---------- Primary action ---------- */
+.auth__submit {
+  position: relative;
+  overflow: hidden;
+  min-height: 52px;
+  border-radius: 999px;
+  font-size: 16px;
+  background: linear-gradient(135deg, #ff2a31, #b30f15);
+  border-color: transparent;
+  box-shadow: 0 10px 30px -8px rgba(215, 20, 26, 0.9);
+  transition: transform 0.15s ease, box-shadow 0.25s ease;
+}
+
+.auth__submit::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: shimmer 3.6s ease-in-out infinite;
+}
+
+.auth__submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ff3b41, #c4121a);
+  border-color: transparent;
+  box-shadow: 0 14px 36px -8px rgba(255, 42, 49, 1);
+  transform: translateY(-1px);
+}
+
+.auth__submit:disabled {
+  opacity: 0.7;
+}
+
 .auth__alt {
+  margin: 0;
+  padding-top: 16px;
   text-align: center;
   font-size: 15px;
-  color: var(--ink-soft);
-  margin: 0;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
+  color: #b4b4bd;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .auth__alt a {
-  color: var(--red);
   margin-left: 4px;
-}
-
-.auth__perks {
-  display: none;
-  list-style: none;
-  margin: 8px 0 0;
-  padding: 0;
-  gap: 10px;
-  flex-direction: column;
-  font-size: 15px;
-}
-
-.auth__perks li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.auth__perks ion-icon {
-  color: var(--red);
-  font-size: 20px;
-  flex: none;
+  color: #ff5258;
+  text-decoration: none;
+  border-bottom: 1.5px solid currentColor;
 }
 
 .auth__terms {
   font-size: 14px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #d4d4da;
+}
+
+.auth__terms a {
+  color: #ff7a7e;
 }
 
 .auth__terms ul {
@@ -86,6 +161,12 @@
   padding-left: 18px;
 }
 
+.auth__form .notice {
+  background: rgba(255, 255, 255, 0.07);
+  color: #e6e6ea;
+}
+
+/* ---------- Role cards ---------- */
 .auth__role {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -93,23 +174,31 @@
 }
 
 .auth__role button {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 4px;
-  text-align: left;
   padding: 14px;
-  border-radius: var(--r-md);
-  border: 1.5px solid var(--line);
-  background: var(--white);
+  text-align: left;
   font: inherit;
-  color: inherit;
+  color: #fff;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
+  border-radius: 18px;
+  border: 1.5px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease, box-shadow 0.25s ease;
+}
+
+.auth__role button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 82, 88, 0.7);
 }
 
 .auth__role ion-icon {
-  font-size: 24px;
+  font-size: 26px;
+  color: #b4b4bd;
+  transition: color 0.2s ease, transform 0.3s ease;
 }
 
 .auth__role strong {
@@ -119,48 +208,62 @@
 
 .auth__role span {
   font-size: 13px;
-  color: var(--ink-soft);
   line-height: 1.3;
+  color: #b4b4bd;
 }
 
 .auth__role button[aria-pressed='true'] {
-  border-color: var(--red);
-  background: #fff4f4;
+  border-color: #ff3b41;
+  background: linear-gradient(160deg, rgba(215, 20, 26, 0.35), rgba(215, 20, 26, 0.08));
+  box-shadow: 0 0 0 3px rgba(215, 20, 26, 0.18), 0 12px 30px -12px rgba(215, 20, 26, 0.9);
 }
 
 .auth__role button[aria-pressed='true'] ion-icon {
-  color: var(--red);
+  color: #ff5258;
+  transform: scale(1.12) rotate(-6deg);
 }
 
-/* Wide screens: the pitch on the left, the form on the right. */
+/* ---------- Entrance: fields come in one after the other ---------- */
+.auth__fields > *,
+.auth__role,
+.auth__head,
+.auth__submit,
+.auth__alt {
+  opacity: 0;
+  animation: rise 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.auth__head { animation-delay: 0.25s; }
+.auth__role { animation-delay: 0.32s; }
+.auth__fields > :nth-child(1) { animation-delay: 0.4s; }
+.auth__fields > :nth-child(2) { animation-delay: 0.48s; }
+.auth__fields > :nth-child(3) { animation-delay: 0.56s; }
+.auth__fields > :nth-child(4) { animation-delay: 0.64s; }
+.auth__submit { animation-delay: 0.72s; }
+.auth__alt { animation-delay: 0.8s; }
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes shimmer {
+  0%, 55% { transform: translateX(-120%); }
+  100% { transform: translateX(120%); }
+}
+@keyframes edge {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+
 @media (min-width: 900px) {
-  .auth {
-    display: grid;
-    grid-template-columns: minmax(0, 1.1fr) minmax(380px, 460px);
-    gap: 48px;
-    align-items: center;
-    max-width: 1080px;
-    min-height: 100%;
-  }
   .auth__form {
-    padding: 30px 28px;
+    padding: 32px 30px;
   }
-  .auth__perks {
-    display: flex;
-    grid-column: 1;
-    margin: 0;
-  }
-  .auth app-hero {
-    grid-column: 1;
-    grid-row: 1;
-    align-self: end;
-  }
-  .auth__perks {
-    grid-row: 2;
-    align-self: start;
-  }
-  .auth__form {
-    grid-column: 2;
-    grid-row: 1 / span 2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth__form *, .auth__form::before {
+    animation: none !important;
+    opacity: 1 !important;
   }
 }

@@ -1,0 +1,238 @@
+:host {
+  display: block;
+  min-height: 100%;
+  background: #050507;
+  color: #fff;
+}
+
+.shell {
+  position: relative;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 28px 16px 40px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* ---------- Background ---------- */
+.shell__bg {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.shell__grid {
+  position: absolute;
+  inset: -44px;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 20%, transparent 75%);
+  animation: grid-drift 14s linear infinite;
+}
+
+.shell__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.55;
+}
+
+.shell__orb--a {
+  width: 340px;
+  height: 340px;
+  top: -120px;
+  right: -100px;
+  background: #d7141a;
+  animation: orb-float 11s ease-in-out infinite;
+}
+
+.shell__orb--b {
+  width: 280px;
+  height: 280px;
+  bottom: -100px;
+  left: -90px;
+  background: #5b0a0e;
+  animation: orb-float 14s ease-in-out infinite reverse;
+}
+
+.shell__scan {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 140px;
+  background: linear-gradient(to bottom, transparent, rgba(215, 20, 26, 0.09), transparent);
+  animation: scan 7s ease-in-out infinite;
+}
+
+/* ---------- Pitch ---------- */
+.shell__pitch {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: rise 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.shell__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+
+.shell__title {
+  margin: 0;
+  font-size: clamp(30px, 9vw, 46px);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  background: linear-gradient(100deg, #fff 40%, #ff7a7e 75%, #fff 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: sheen 6s ease-in-out infinite;
+}
+
+.shell__lede {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 16px;
+  color: #c9c9d1;
+}
+
+.shell__route {
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  overflow: visible;
+}
+
+.shell__path {
+  stroke-dasharray: 520;
+  stroke-dashoffset: 520;
+  animation: draw 2.4s 0.3s ease-out forwards;
+  filter: drop-shadow(0 0 6px rgba(215, 20, 26, 0.9));
+}
+
+.shell__dot {
+  fill: #fff;
+}
+
+.shell__dot--end {
+  fill: #d7141a;
+  animation: ping 2s ease-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.shell__truck {
+  offset-path: path('M12 96 C70 96 74 28 140 28 S 220 100 268 70 S 320 24 348 24');
+  offset-rotate: 0deg;
+  animation: travel 5s 2.6s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px rgba(215, 20, 26, 0.95));
+}
+
+.shell__perks {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 15px;
+  color: #e6e6ea;
+}
+
+.shell__perks li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  opacity: 0;
+  animation: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.shell__perks li:nth-child(1) { animation-delay: 0.5s; }
+.shell__perks li:nth-child(2) { animation-delay: 0.65s; }
+.shell__perks li:nth-child(3) { animation-delay: 0.8s; }
+
+.shell__perks ion-icon {
+  flex: none;
+  font-size: 20px;
+  color: #ff3b41;
+}
+
+/* ---------- Form panel ---------- */
+.shell__panel {
+  animation: rise 0.7s 0.15s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@media (min-width: 900px) {
+  .shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(400px, 470px);
+    gap: 64px;
+    align-items: center;
+    justify-content: center;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 32px;
+    min-height: 100vh;
+  }
+  .shell__bg {
+    position: fixed;
+  }
+  .shell__perks {
+    display: flex;
+  }
+}
+
+/* ---------- Motion ---------- */
+@keyframes rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes grid-drift {
+  to { transform: translate(44px, 44px); }
+}
+@keyframes orb-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-30px, 26px) scale(1.12); }
+}
+@keyframes scan {
+  0% { top: -160px; }
+  100% { top: 110%; }
+}
+@keyframes sheen {
+  0%, 100% { background-position: 100% 0; }
+  50% { background-position: 0 0; }
+}
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes travel {
+  from { offset-distance: 0%; opacity: 0; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  to { offset-distance: 100%; opacity: 0; }
+}
+@keyframes ping {
+  0% { transform: scale(1); opacity: 1; }
+  80%, 100% { transform: scale(2.6); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+  }
+  .shell__path { stroke-dashoffset: 0; }
+  .shell__perks li { opacity: 1; }
+  .shell__truck { display: none; }
+}

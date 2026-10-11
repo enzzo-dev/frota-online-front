@@ -15,7 +15,7 @@ import { RegisterRequest, Term } from '../../core/models';
 import { TERM_TYPE_LABEL } from '../../core/ui/labels';
 import { createRequestState } from '../../core/ui/request-state';
 import { normalizePhone } from '../../core/util/normalizers';
-import { HeroComponent } from '../../shared/components/hero.component';
+import { AuthShellComponent } from '../../shared/components/auth-shell.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
 import { notBlank, phone, strongPassword } from '../../shared/forms/validators';
 
@@ -31,24 +31,17 @@ type SignUpRole = RegisterRequest['role'];
     IonInput,
     IonInputPasswordToggle,
     IonSpinner,
-    HeroComponent,
+    AuthShellComponent,
     ProblemAlertComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './auth.styles.scss',
   template: `
     <ion-content [fullscreen]="true">
-      <div class="page auth">
-        <app-hero
-          [brand]="true"
-          title="Crie sua conta em um minuto."
-          lede="Cliente pede o frete. Motorista carrega e escolhe o próprio preço."
-        />
-        <ul class="auth__perks">
-          <li><ion-icon name="pricetag-outline" aria-hidden="true" /> Motorista escolhe o próprio preço</li>
-          <li><ion-icon name="map-outline" aria-hidden="true" /> Acompanhe a rota e a entrega no mapa</li>
-          <li><ion-icon name="shield-checkmark-outline" aria-hidden="true" /> Pagamento confirmado a cada etapa</li>
-        </ul>
+       <app-auth-shell
+        title="Crie sua conta em um minuto."
+        lede="Cliente pede o frete. Motorista carrega e escolhe o próprio preço."
+      >
 
         <form class="auth__form stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
           <div class="auth__head">
@@ -134,7 +127,7 @@ type SignUpRole = RegisterRequest['role'];
 
           <app-problem-alert [error]="request.error()" />
 
-          <button class="btn btn--block" type="submit" [disabled]="request.loading()">
+          <button class="btn btn--block auth__submit" type="submit" [disabled]="request.loading()">
             @if (request.loading()) {
               <ion-spinner name="crescent" />
             }
@@ -146,7 +139,7 @@ type SignUpRole = RegisterRequest['role'];
             <a class="link-btn" routerLink="/auth/login">Entrar</a>
           </p>
         </form>
-      </div>
+      </app-auth-shell>
     </ion-content>
   `,
 })

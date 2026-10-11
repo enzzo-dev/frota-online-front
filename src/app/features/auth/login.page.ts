@@ -3,7 +3,6 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   IonContent,
-  IonIcon,
   IonInput,
   IonInputPasswordToggle,
   IonSpinner,
@@ -11,7 +10,7 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { createRequestState } from '../../core/ui/request-state';
-import { HeroComponent } from '../../shared/components/hero.component';
+import { AuthShellComponent } from '../../shared/components/auth-shell.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
 import { notBlank } from '../../shared/forms/validators';
 
@@ -21,28 +20,20 @@ import { notBlank } from '../../shared/forms/validators';
     ReactiveFormsModule,
     RouterLink,
     IonContent,
-    IonIcon,
     IonInput,
     IonInputPasswordToggle,
     IonSpinner,
-    HeroComponent,
+    AuthShellComponent,
     ProblemAlertComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './auth.styles.scss',
   template: `
     <ion-content [fullscreen]="true">
-      <div class="page auth">
-        <app-hero
-          [brand]="true"
-          title="O motorista define o preço. Aqui o frete anda."
-          lede="Entre para pedir um frete ou para carregar um."
-        />
-        <ul class="auth__perks">
-          <li><ion-icon name="pricetag-outline" aria-hidden="true" /> Motorista escolhe o próprio preço</li>
-          <li><ion-icon name="map-outline" aria-hidden="true" /> Acompanhe a rota e a entrega no mapa</li>
-          <li><ion-icon name="shield-checkmark-outline" aria-hidden="true" /> Pagamento confirmado a cada etapa</li>
-        </ul>
+       <app-auth-shell
+        title="O motorista define o preço. Aqui o frete anda."
+        lede="Entre para pedir um frete ou para carregar um."
+      >
 
         <form class="auth__form stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
           @if (accountDeleted) {
@@ -85,7 +76,7 @@ import { notBlank } from '../../shared/forms/validators';
 
           <app-problem-alert [error]="request.error()" />
 
-          <button class="btn btn--block" type="submit" [disabled]="request.loading()">
+          <button class="btn btn--block auth__submit" type="submit" [disabled]="request.loading()">
             @if (request.loading()) {
               <ion-spinner name="crescent" />
             }
@@ -97,7 +88,7 @@ import { notBlank } from '../../shared/forms/validators';
             <a class="link-btn" routerLink="/auth/register">Criar conta</a>
           </p>
         </form>
-      </div>
+      </app-auth-shell>
     </ion-content>
   `,
 })

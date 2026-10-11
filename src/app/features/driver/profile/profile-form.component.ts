@@ -6,6 +6,8 @@ import { DriverService } from '../../../core/api/driver.service';
 import { DriverProfile } from '../../../core/models';
 import { CNH_CATEGORIES } from '../../../core/ui/labels';
 import { createRequestState } from '../../../core/ui/request-state';
+import { maskTaxId } from '../../../core/util/masks';
+import { MaskDirective } from '../../../shared/forms/mask.directive';
 import { normalizeTaxId } from '../../../core/util/normalizers';
 import { ProblemAlertComponent } from '../../../shared/components/problem-alert.component';
 import { notBlank, taxId } from '../../../shared/forms/validators';
@@ -14,13 +16,14 @@ import { Validators } from '@angular/forms';
 /** Step 2: CPF/CNPJ, CNH and category. Read-only once the profile is under review or approved. */
 @Component({
   selector: 'app-driver-profile-form',
-  imports: [ReactiveFormsModule, IonInput, IonSelect, IonSelectOption, IonSpinner, ProblemAlertComponent],
+  imports: [MaskDirective, ReactiveFormsModule, IonInput, IonSelect, IonSelectOption, IonSpinner, ProblemAlertComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (editable()) {
       <form class="stack" [formGroup]="form" (ngSubmit)="save()" novalidate>
         <ion-input
           formControlName="taxId"
+          appMask="taxId"
           label="CPF ou CNPJ"
           labelPlacement="stacked"
           fill="outline"
@@ -68,7 +71,7 @@ import { Validators } from '@angular/forms';
     } @else if (profile(); as p) {
       <dl class="kv">
         <dt>CPF/CNPJ</dt>
-        <dd class="mono">{{ p.taxId }}</dd>
+        <dd class="mono">{{ maskedTaxId(p.taxId) }}</dd>
         <dt>CNH</dt>
         <dd class="mono">{{ p.cnhNumber }}</dd>
         <dt>Categoria</dt>
@@ -94,13 +97,15 @@ export class DriverProfileFormComponent {
     cnhCategory: ['', [Validators.required]],
   });
 
+  protected readonly maskedTaxId = maskTaxId;
+
   constructor() {
     // Fill the form from the saved profile whenever it changes (first load, or a refresh).
     effect(() => {
       const current = this.profile();
       if (current) {
         this.form.patchValue(
-          { taxId: current.taxId, cnhNumber: current.cnhNumber, cnhCategory: current.cnhCategory },
+          { taxId: maskTaxId(current.taxId), cnhNumber: current.cnhNumber, cnhCategory: current.cnhCategory },
           { emitEvent: false },
         );
       }

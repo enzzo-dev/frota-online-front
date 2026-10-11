@@ -17,6 +17,7 @@ import { createRequestState } from '../../core/ui/request-state';
 import { normalizePhone } from '../../core/util/normalizers';
 import { AuthShellComponent } from '../../shared/components/auth-shell.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
+import { MaskDirective } from '../../shared/forms/mask.directive';
 import { notBlank, phone, strongPassword } from '../../shared/forms/validators';
 
 type SignUpRole = RegisterRequest['role'];
@@ -24,6 +25,7 @@ type SignUpRole = RegisterRequest['role'];
 @Component({
   selector: 'app-register-page',
   imports: [
+    MaskDirective,
     ReactiveFormsModule,
     RouterLink,
     IonContent,
@@ -86,6 +88,7 @@ type SignUpRole = RegisterRequest['role'];
           <ion-input
             type="tel"
             formControlName="phoneNumber"
+            appMask="phone"
             label="Celular com DDD"
             labelPlacement="stacked"
             fill="outline"

@@ -49,6 +49,10 @@ export const DRIVER_ROUTES: Routes = [
     loadComponent: () => import('./fees.page').then((m) => m.FeesPage),
   },
   {
+    path: 'billing',
+    loadComponent: () => import('./billing.page').then((m) => m.BillingPage),
+  },
+  {
     path: 'deliveries/:id',
     canActivate: [driverApprovedGuard],
     loadComponent: () => import('./delivery-route.page').then((m) => m.DeliveryRoutePage),

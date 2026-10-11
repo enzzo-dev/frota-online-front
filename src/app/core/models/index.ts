@@ -8,3 +8,5 @@ export * from './admin.models';
 export * from './privacy.models';
 export * from './routing.models';
 export * from './delivery.models';
+export * from './notification.models';
+export * from './payment.models';

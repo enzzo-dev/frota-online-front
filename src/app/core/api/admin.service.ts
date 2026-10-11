@@ -4,6 +4,7 @@ import { ApiClient } from '../http/api-client';
 import {
   DriverReviewDetail,
   DriverReviewSummary,
+  DownloadUrl,
   DriverStatus,
   PublishTermRequest,
   Term,
@@ -20,6 +21,11 @@ export class AdminService {
 
   driver(driverId: string): Observable<DriverReviewDetail> {
     return this.api.get<DriverReviewDetail>(`/admin/drivers/${driverId}`);
+  }
+
+  /** A link that opens one of the driver's files for 10 minutes (the bucket is never public). */
+  driverFileUrl(driverId: string, fileId: string): Observable<DownloadUrl> {
+    return this.api.get<DownloadUrl>(`/admin/drivers/${driverId}/files/${fileId}/url`);
   }
 
   approveDriver(driverId: string): Observable<void> {

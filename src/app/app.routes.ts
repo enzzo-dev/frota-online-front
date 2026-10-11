@@ -18,6 +18,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/account/privacy.page').then((m) => m.PrivacyPage),
   },
   {
+    path: 'notifications',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/notifications/notifications.page').then((m) => m.NotificationsPage),
+  },
+  {
     path: 'driver',
     canActivate: [roleGuard('Driver')],
     loadChildren: () => import('./features/driver/driver.routes').then((m) => m.DRIVER_ROUTES),

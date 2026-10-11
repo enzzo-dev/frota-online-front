@@ -4,6 +4,8 @@ import { ApiClient } from '../http/api-client';
 import { ApiError } from '../http/api-error';
 import {
   DriverProfile,
+  MediaKind,
+  UploadUrl,
   MediaFile,
   RegisterMediaRequest,
   RegisterVehicleRequest,
@@ -54,5 +56,10 @@ export class DriverService {
 
   registerDocument(request: RegisterMediaRequest): Observable<MediaFile> {
     return this.api.post<MediaFile>('/driver/documents', request);
+  }
+
+  /** Step 1 of an upload: where to PUT the bytes. */
+  uploadUrl(kind: MediaKind, contentType: string): Observable<UploadUrl> {
+    return this.api.post<UploadUrl>('/driver/documents/upload-url', { kind, contentType });
   }
 }

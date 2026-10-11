@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { IonContent, IonIcon, IonRefresher, IonRefresherContent, IonSpinner } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
@@ -72,6 +72,28 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
           }
         </section>
 
+        <a class="card card--link row row--between" routerLink="/notifications">
+          <span class="row">
+            <ion-icon name="notifications-outline" aria-hidden="true" />
+            <span>
+              <strong class="strong">Avisos</strong>
+              <span class="muted small" style="display: block">Caixa de entrada e preferências de aviso</span>
+            </span>
+          </span>
+        </a>
+
+        @if (isDriver()) {
+          <a class="card card--link row row--between" routerLink="/driver/billing">
+            <span class="row">
+              <ion-icon name="ribbon-outline" aria-hidden="true" />
+              <span>
+                <strong class="strong">Assinatura e recebimento</strong>
+                <span class="muted small" style="display: block">Plano mensal e conta que recebe o Pix</span>
+              </span>
+            </span>
+          </a>
+        }
+
         <a class="card card--link row row--between" routerLink="/privacy">
           <span class="row">
             <ion-icon name="shield-checkmark-outline" aria-hidden="true" />
@@ -105,6 +127,7 @@ export class AccountPage {
   protected readonly consents = signal<Consent[]>([]);
   protected readonly pending = signal<Term[]>([]);
   protected readonly signingOut = signal(false);
+  protected readonly isDriver = computed(() => this.session.role() === 'Driver');
 
   protected roleLabel(): string {
     const role = this.session.role();

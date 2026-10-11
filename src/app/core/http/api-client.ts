@@ -23,8 +23,8 @@ export class ApiClient {
     return this.http.put<T>(this.url(path), body);
   }
 
-  delete<T>(path: string): Observable<T> {
-    return this.http.delete<T>(this.url(path));
+  delete<T>(path: string, query?: QueryParams): Observable<T> {
+    return this.http.delete<T>(this.url(path), { params: toParams(query) });
   }
 
   private url(path: string): string {

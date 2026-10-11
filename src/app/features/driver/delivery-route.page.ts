@@ -40,7 +40,6 @@ import {
   ACCEPTED_DOCUMENT_TYPES,
   FileUploader,
   MAX_DOCUMENT_BYTES,
-  buildStorageKey,
   formatBytes,
 } from './profile/file-uploader';
 
@@ -275,10 +274,10 @@ const CANCELLABLE: readonly DeliveryStatus[] = ['Scheduled', 'ToPickup', 'Incide
                     @if (proofProblem(); as problem) {
                       <p class="field-hint">{{ problem }}</p>
                     }
-                    @if (!uploader.storesFiles) {
+                    @if (!uploader.storesFiles()) {
                       <p class="field-hint">
-                        O envio do arquivo para o armazenamento ainda não está ligado nesta versão: só os dados do
-                        comprovante são registrados na API.
+                        Este ambiente não tem armazenamento de arquivos ligado: só os dados do comprovante são
+                        registrados na API.
                       </p>
                     }
                   </div>
@@ -548,8 +547,7 @@ export class DeliveryRoutePage {
       return null;
     }
     const userId = this.session.user()?.id ?? '';
-    const storageKey = buildStorageKey(userId, file.name);
-    await this.uploader.upload(file, storageKey);
+    const storageKey = await this.uploader.upload(file, 'DeliveryProof', userId);
     const media = await firstValueFrom(
       this.driver.registerDocument({
         kind: 'DeliveryProof',

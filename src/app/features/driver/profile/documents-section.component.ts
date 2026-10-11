@@ -15,7 +15,6 @@ import {
   ACCEPTED_DOCUMENT_TYPES,
   FileUploader,
   MAX_DOCUMENT_BYTES,
-  buildStorageKey,
   formatBytes,
 } from './file-uploader';
 
@@ -68,10 +67,10 @@ import {
         </label>
         <p class="field-hint">JPEG, PNG ou PDF, até 10 MB.</p>
 
-        @if (!uploader.storesFiles) {
+        @if (!uploader.storesFiles()) {
           <div class="notice" role="note">
-            O envio do arquivo para o armazenamento ainda não existe na API. Por enquanto o app registra
-            apenas a referência (chave, tipo e tamanho) do arquivo escolhido.
+            Este ambiente não tem armazenamento de arquivos ligado. O app registra apenas a referência
+            (chave, tipo e tamanho) do arquivo escolhido.
           </div>
         }
 
@@ -169,9 +168,8 @@ export class DocumentsSectionComponent {
     if (!file) {
       return;
     }
-    const storageKey = buildStorageKey(this.userId(), file.name);
     const result = await this.request.run(async () => {
-      await this.uploader.upload(file, storageKey);
+      const storageKey = await this.uploader.upload(file, this.kind(), this.userId());
       return firstValueFrom(
         this.driver.registerDocument({
           kind: this.kind(),

@@ -85,14 +85,20 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
           <section class="stack">
             <h3>Arquivos</h3>
             @for (file of d.files; track file.id) {
-              <article class="card">
-                <p class="strong">{{ kindLabel[file.kind] }}</p>
-                <p class="muted small break">{{ file.storageKey }} · {{ file.contentType }}</p>
-                <p class="muted small">{{ file.createdAt | utc | date: 'dd/MM/yyyy HH:mm' }}</p>
+              <article class="card row row--between">
+                <div class="grow">
+                  <p class="strong">{{ kindLabel[file.kind] }}</p>
+                  <p class="muted small break">{{ file.storageKey }} · {{ file.contentType }}</p>
+                  <p class="muted small">{{ file.createdAt | utc | date: 'dd/MM/yyyy HH:mm' }}</p>
+                </div>
+                <button class="btn btn--ghost btn--sm" type="button" [disabled]="opening() === file.id" (click)="openFile(d, file.id)">
+                  Abrir
+                </button>
               </article>
             } @empty {
               <p class="notice">Nenhum arquivo registrado.</p>
             }
+            <app-problem-alert [error]="fileProblem.error()" />
           </section>
 
           @if (d.rejectionReason) {
@@ -125,6 +131,8 @@ export class DriverReviewPage {
   protected readonly kindLabel = MEDIA_KIND_LABEL;
   protected readonly load = createRequestState();
   protected readonly decision = createRequestState();
+  protected readonly opening = signal<string | null>(null);
+  protected readonly fileProblem = createRequestState();
   protected readonly driver = signal<DriverReviewDetail | null>(null);
 
   ionViewWillEnter(): void {
@@ -134,6 +142,19 @@ export class DriverReviewPage {
   protected async refresh(event: Event): Promise<void> {
     await this.reload();
     completeRefresh(event);
+  }
+
+  /** Asks for a 10-minute link and opens it in a new tab. */
+  protected async openFile(driver: DriverReviewDetail, fileId: string): Promise<void> {
+    this.opening.set(fileId);
+    try {
+      const link = await this.fileProblem.run(() => firstValueFrom(this.admin.driverFileUrl(driver.driverId, fileId)));
+      if (link) {
+        window.open(link.url, '_blank', 'noopener,noreferrer');
+      }
+    } finally {
+      this.opening.set(null);
+    }
   }
 
   protected async approve(driver: DriverReviewDetail): Promise<void> {

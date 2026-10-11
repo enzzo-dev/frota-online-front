@@ -1,14 +1,16 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { IonContent, IonRefresher, IonRefresherContent } from '@ionic/angular';
+import { IonContent, IonRefresher, IonRefresherContent, IonSpinner } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { DriverFeesService } from '../../core/api/driver-fees.service';
-import { FeeStatement } from '../../core/models';
+import { FeeCharge, FeeStatement } from '../../core/models';
 import { completeRefresh } from '../../core/ui/refresher';
 import { createRequestState } from '../../core/ui/request-state';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { PixCardComponent } from '../../shared/components/pix-card.component';
 import { PageBarComponent } from '../../shared/components/page-bar.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
+import { Poller } from '../../core/util/poller';
 import { UtcPipe } from '../../shared/pipes/utc.pipe';
 
 /** What the driver owes the platform: one fee per delivered run, reduced when an admin records a settlement. */
@@ -20,8 +22,10 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
     IonContent,
     IonRefresher,
     IonRefresherContent,
+    IonSpinner,
     EmptyStateComponent,
     PageBarComponent,
+    PixCardComponent,
     ProblemAlertComponent,
     UtcPipe,
   ],
@@ -63,12 +67,28 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
             <p class="balance">{{ s.balance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</p>
             <p class="small">
               @if (s.balance > 0) {
-                É o que você deve à plataforma. O acerto é registrado por um administrador depois que você paga.
+                É o que você deve à plataforma pelos fretes pagos fora do app. Pague por Pix aqui e o saldo é quitado sozinho.
               } @else {
                 Nada em aberto. Novas taxas aparecem aqui a cada entrega concluída.
               }
             </p>
+            @if (s.balance > 0 && !charge()) {
+              <button class="btn btn--on-dark btn--block" type="button" [disabled]="pixRequest.loading()" (click)="payByPix()">
+                @if (pixRequest.loading()) {
+                  <ion-spinner name="crescent" />
+                }
+                Pagar por Pix
+              </button>
+            }
           </section>
+
+          <app-problem-alert [error]="pixRequest.error()" />
+
+          @if (charge(); as c) {
+            <app-pix-card [amount]="c.amount" [payload]="c.pixPayload" [qrCode]="c.pixQrCode" [expiresAt]="c.expiresAt">
+              <p class="small muted">Pagando este Pix, a taxa em aberto é quitada automaticamente e você recebe um aviso.</p>
+            </app-pix-card>
+          }
 
           <div class="stats stats--2">
             <div class="stat">
@@ -121,9 +141,28 @@ export class FeesPage {
 
   protected readonly load = createRequestState();
   protected readonly statement = signal<FeeStatement | null>(null);
+  protected readonly pixRequest = createRequestState();
+  protected readonly charge = signal<FeeCharge | null>(null);
+  private readonly poller = new Poller(async () => {
+    if (this.charge()) {
+      await this.reload();
+    }
+  }, 5_000);
 
   ionViewWillEnter(): void {
     void this.reload();
+    this.poller.start();
+  }
+
+  ionViewWillLeave(): void {
+    this.poller.stop();
+  }
+
+  protected async payByPix(): Promise<void> {
+    const charge = await this.pixRequest.run(() => firstValueFrom(this.api.payByPix()));
+    if (charge) {
+      this.charge.set(charge);
+    }
   }
 
   protected async refresh(event: Event): Promise<void> {
@@ -135,6 +174,10 @@ export class FeesPage {
     const statement = await this.load.run(() => firstValueFrom(this.api.statement()));
     if (statement) {
       this.statement.set(statement);
+      // Paid: the balance is gone, so the Pix is no longer needed.
+      if (statement.balance <= 0) {
+        this.charge.set(null);
+      }
     }
   }
 }

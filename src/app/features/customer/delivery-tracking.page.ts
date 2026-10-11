@@ -1,20 +1,24 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { IonContent, IonRefresher, IonRefresherContent } from '@ionic/angular';
+import { FormsModule } from '@angular/forms';
+import { IonContent, IonInput, IonRefresher, IonRefresherContent, IonSpinner } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { CustomerDeliveriesService } from '../../core/api/customer-deliveries.service';
 import { FreightsService } from '../../core/api/freights.service';
 import { ApiError } from '../../core/http/api-error';
-import { CustomerDeliveryDetail, RouteMap } from '../../core/models';
+import { CustomerDeliveryDetail, PixPayment, RouteMap } from '../../core/models';
 import { ConfirmService } from '../../core/ui/confirm.service';
 import { DELIVERY_STATUS_VIEW, PAYMENT_STATUS_VIEW, VEHICLE_TYPE_LABEL } from '../../core/ui/labels';
 import { completeRefresh } from '../../core/ui/refresher';
 import { createRequestState } from '../../core/ui/request-state';
 import { ToastService } from '../../core/ui/toast.service';
+import { maskTaxId } from '../../core/util/masks';
+import { normalizeTaxId } from '../../core/util/normalizers';
 import { Poller } from '../../core/util/poller';
 import { fromFreightStops } from '../../core/util/stop-views';
 import { DeliveryTimelineComponent } from '../../shared/components/delivery-timeline.component';
+import { PixCardComponent } from '../../shared/components/pix-card.component';
 import { PageBarComponent } from '../../shared/components/page-bar.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
 import { RouteMapCardComponent } from '../../shared/components/route-map-card.component';
@@ -31,11 +35,15 @@ const TRACK_POLL_MS = 5_000;
   imports: [
     CurrencyPipe,
     DatePipe,
+    FormsModule,
     IonContent,
+    IonInput,
     IonRefresher,
     IonRefresherContent,
+    IonSpinner,
     DeliveryTimelineComponent,
     PageBarComponent,
+    PixCardComponent,
     ProblemAlertComponent,
     RouteMapCardComponent,
     StatusChipComponent,
@@ -132,15 +140,58 @@ const TRACK_POLL_MS = 5_000;
                   <dd>
                     @if (d.payment; as payment) {
                       {{ paymentView[payment].label }}
+                    } @else if (d.status === 'Delivered') {
+                      Aguardando o pagamento
                     } @else {
                       Aguardando a entrega
                     }
                   </dd>
                 </dl>
-                <p class="field-hint">
-                  O pagamento acontece direto com o motorista, fora do app. Aqui você só vê quando ele confirma que recebeu.
-                </p>
+                @if (!payable()) {
+                  <p class="field-hint">
+                    O pagamento pode ser feito por Pix aqui no app, depois da entrega, ou direto com o motorista. Quando o
+                    pagamento é confirmado, aparece aqui.
+                  </p>
+                }
               </section>
+
+              @if (payable()) {
+                <section class="stack" aria-label="Pagar com Pix">
+                  <h2>Pagar com Pix</h2>
+                  @if (pix(); as p) {
+                    <app-pix-card [amount]="p.amount" [payload]="p.pixPayload" [qrCode]="p.pixQrCode" [expiresAt]="p.expiresAt">
+                      <p class="small muted">
+                        {{ p.driverReceives | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }} vão direto para o motorista e
+                        {{ p.platformFee | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }} para a plataforma.
+                      </p>
+                    </app-pix-card>
+                  } @else {
+                    <div class="card stack">
+                      <p class="small">
+                        A entrega foi concluída. Gere um Pix para pagar: o motorista recebe o valor direto na conta dele.
+                      </p>
+                      <ion-input
+                        label="CPF ou CNPJ de quem paga"
+                        labelPlacement="stacked"
+                        fill="outline"
+                        inputmode="text"
+                        autocapitalize="characters"
+                        [value]="taxId()"
+                        (ionInput)="onTaxId($event)"
+                        helperText="O serviço de pagamento exige o documento de quem paga."
+                      />
+                      <app-problem-alert [error]="pixRequest.error()" />
+                      <button class="btn btn--block" type="button" [disabled]="pixRequest.loading() || !taxIdReady()" (click)="generatePix(d)">
+                        @if (pixRequest.loading()) {
+                          <ion-spinner name="crescent" />
+                        }
+                        Gerar Pix
+                      </button>
+                      <p class="field-hint">Prefere pagar direto ao motorista? Faça isso e aguarde ele confirmar o recebimento.</p>
+                    </div>
+                  }
+                </section>
+              }
 
               <section class="stack">
                 <h2>Linha do tempo</h2>
@@ -185,6 +236,9 @@ export class DeliveryTrackingPage {
   protected readonly vehicleLabel = VEHICLE_TYPE_LABEL;
   protected readonly load = createRequestState();
   protected readonly action = createRequestState();
+  protected readonly pixRequest = createRequestState();
+  protected readonly pix = signal<PixPayment | null>(null);
+  protected readonly taxId = signal('');
 
   protected readonly delivery = signal<CustomerDeliveryDetail | null>(null);
   protected readonly route = signal<RouteMap | null>(null);
@@ -201,13 +255,20 @@ export class DeliveryTrackingPage {
     const status = this.delivery()?.status;
     return status !== undefined && status !== 'Delivered' && status !== 'Cancelled';
   });
+  /** Delivered and not paid yet: the customer can pay by Pix in the app. */
+  protected readonly payable = computed(() => {
+    const d = this.delivery();
+    return d !== null && d.status === 'Delivered' && d.payment !== 'Paid';
+  });
+  protected readonly taxIdReady = computed(() => /^(\d{11}|[A-Z0-9]{14})$/.test(normalizeTaxId(this.taxId())));
   protected readonly cancellable = computed(() => {
     const status = this.delivery()?.status;
     return status === 'Scheduled' || status === 'ToPickup';
   });
 
   private readonly poller = new Poller(async () => {
-    if (this.running()) {
+    // Keeps going after delivery while a Pix is waiting, so the payment shows up by itself.
+    if (this.running() || (this.pix() !== null && this.payable())) {
       await this.fetch();
     }
   }, TRACK_POLL_MS);
@@ -220,6 +281,22 @@ export class DeliveryTrackingPage {
 
   ionViewWillLeave(): void {
     this.poller.stop();
+  }
+
+  protected onTaxId(event: Event): void {
+    const value = String((event as CustomEvent<{ value?: string | null }>).detail?.value ?? '');
+    const masked = maskTaxId(value);
+    this.taxId.set(masked);
+    (event.target as HTMLIonInputElement).value = masked;
+  }
+
+  protected async generatePix(delivery: CustomerDeliveryDetail): Promise<void> {
+    const pix = await this.pixRequest.run(() =>
+      firstValueFrom(this.api.payByPix(delivery.deliveryId, normalizeTaxId(this.taxId()))),
+    );
+    if (pix) {
+      this.pix.set(pix);
+    }
   }
 
   protected async refresh(event: Event): Promise<void> {

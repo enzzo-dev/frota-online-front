@@ -37,6 +37,7 @@ npm run build      # production build in dist/
 - Geocoding: the API does not geocode. `core/api/geocoding.service.ts` asks **Nominatim** only when the customer taps
   "Localizar no mapa" (at most 1 request per second, per its usage policy) and sends `latitude` and `longitude` together.
   Use a hosted geocoder for production volume.
+- Addresses can be edited (`PUT`, only if no freight ever used them; otherwise `address.in_use` offers "save as new") and deleted (`address.in_active_use` blocks one in an open freight or running delivery).
 - Route preview: `POST /freights/route-preview` runs in the freight wizard as soon as the addresses are chosen.
   `distanceMeters`/`durationSeconds` null with an empty `path` is not an error: pins plus a straight line are drawn.
 - Driver board shows `routeDistanceMeters`/`routeDurationSeconds` and approximate pins (about 1 km, never the street).
@@ -45,7 +46,6 @@ npm run build      # production build in dist/
 
 ### What the API still lacks
 - No upload endpoint (pre-signed URL) for delivery proofs and documents: `FileUploader` only registers metadata.
-- No way to edit or delete a saved address, so an address without position can only be replaced by a new one.
 - No endpoint for "the delivery of this freight": the app matches `GET /deliveries` by `freightRequestId`.
 - No live driver position for the customer, and no push/websocket (polling only).
 - CORS is not configured (see Configuration).

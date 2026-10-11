@@ -42,6 +42,10 @@ export const ERROR_MESSAGES: Readonly<Record<string, string>> = {
   'proposal.driver_busy': 'O motorista já tem outra corrida nesse horário. Escolha outra proposta.',
   'proposal.vehicle_not_eligible': 'O veículo não é do tipo pedido ou não comporta o peso.',
 
+  'address.not_found': 'Endereço não encontrado.',
+  'address.in_use': 'Este endereço já foi usado em um frete e não pode ser editado. Salve como um novo endereço.',
+  'address.in_active_use': 'Este endereço está em um frete aberto ou em uma entrega em andamento. Cancele o frete antes.',
+  'request.conflict': 'Outra ação mudou este item ao mesmo tempo. Atualizamos a tela, tente de novo.',
   'delivery.not_found': 'Entrega não encontrada.',
   'delivery.stop_out_of_order': 'As paradas seguem a ordem da rota. Conclua primeiro a parada indicada.',
   'delivery.invalid_proof': 'O comprovante não é válido: use um arquivo de comprovante de entrega seu.',

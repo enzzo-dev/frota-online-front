@@ -51,8 +51,8 @@ import { MapPin, MapViewComponent } from './map-view.component';
             }
           </ul>
           <p class="small">
-            Cadastre o endereço de novo usando "Localizar no mapa" e escolha o novo no lugar. Por enquanto a API não
-            permite editar um endereço salvo.
+            Edite o endereço em Endereços e use "Localizar no mapa". Se ele já foi usado em um frete, salve como um
+            novo endereço e escolha o novo aqui.
           </p>
         </div>
       } @else if (error(); as problem) {

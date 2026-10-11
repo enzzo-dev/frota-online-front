@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, input, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import {
   IonButton,
@@ -17,7 +17,7 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { AddressesService } from '../../core/api/addresses.service';
 import { GeocodingService } from '../../core/api/geocoding.service';
-import { GeoPoint } from '../../core/models';
+import { Address, CreateAddressRequest, GeoPoint } from '../../core/models';
 import { BRAZILIAN_STATES } from '../../core/ui/labels';
 import { createRequestState } from '../../core/ui/request-state';
 import { normalizeZip } from '../../core/util/normalizers';
@@ -25,7 +25,10 @@ import { MapViewComponent } from '../../shared/components/map-view.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
 import { notBlank, zipCode } from '../../shared/forms/validators';
 
-/** Bottom sheet that saves a pickup or delivery address. Dismisses with the saved address on role `created`. */
+/**
+ * Bottom sheet that saves a pickup or delivery address, or edits one when `address` is given.
+ * Dismisses with the saved address on role `created` (new) or `updated` (edited).
+ */
 @Component({
   selector: 'app-address-sheet',
   imports: [
@@ -48,7 +51,7 @@ import { notBlank, zipCode } from '../../shared/forms/validators';
   template: `
     <ion-header class="plain-header">
       <ion-toolbar class="plain">
-        <ion-title>Novo endereço</ion-title>
+        <ion-title>{{ address() ? 'Editar endereço' : 'Novo endereço' }}</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="close()">Fechar</ion-button>
         </ion-buttons>
@@ -174,13 +177,19 @@ import { notBlank, zipCode } from '../../shared/forms/validators';
           }
         </section>
 
-        <app-problem-alert [error]="request.error()" />
+        <app-problem-alert [error]="request.error()">
+          @if (request.error()?.code === 'address.in_use') {
+            <button class="btn btn--ghost btn--sm" type="button" [disabled]="request.loading()" (click)="save(true)">
+              Salvar como novo endereço
+            </button>
+          }
+        </app-problem-alert>
 
         <button class="btn btn--block" type="submit" [disabled]="request.loading()">
           @if (request.loading()) {
             <ion-spinner name="crescent" />
           }
-          Salvar endereço
+          {{ address() ? 'Salvar alterações' : 'Salvar endereço' }}
         </button>
       </form>
     </ion-content>
@@ -194,7 +203,10 @@ import { notBlank, zipCode } from '../../shared/forms/validators';
     }
   `,
 })
-export class AddressSheetComponent {
+export class AddressSheetComponent implements OnInit {
+  /** The address being edited. Absent when saving a new one. */
+  readonly address = input<Address | null>(null);
+
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly addresses = inject(AddressesService);
   private readonly modals = inject(ModalController);
@@ -254,35 +266,57 @@ export class AddressSheetComponent {
     this.geoState.set('idle');
   }
 
+  ngOnInit(): void {
+    const current = this.address();
+    if (!current) {
+      return;
+    }
+    this.form.patchValue({
+      label: current.label,
+      street: current.street,
+      number: current.number,
+      complement: current.complement ?? '',
+      district: current.district,
+      city: current.city,
+      state: current.state,
+      zipCode: current.zipCode,
+    });
+    if (current.latitude !== null && current.longitude !== null) {
+      this.position.set({ latitude: current.latitude, longitude: current.longitude });
+    }
+  }
+
   protected close(): Promise<boolean> {
     return this.modals.dismiss(null, 'cancel');
   }
 
-  protected async save(): Promise<void> {
+  /** `asNew` saves a copy instead of editing, for an address a freight already used. */
+  protected async save(asNew = false): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
     const v = this.form.getRawValue();
     const point = this.position();
-    const address = await this.request.run(() =>
-      firstValueFrom(
-        this.addresses.create({
-          label: v.label.trim(),
-          street: v.street.trim(),
-          number: v.number.trim(),
-          complement: v.complement.trim() || null,
-          district: v.district.trim(),
-          city: v.city.trim(),
-          state: v.state,
-          zipCode: normalizeZip(v.zipCode),
-          latitude: point?.latitude ?? null,
-          longitude: point?.longitude ?? null,
-        }),
-      ),
+    const payload: CreateAddressRequest = {
+      label: v.label.trim(),
+      street: v.street.trim(),
+      number: v.number.trim(),
+      complement: v.complement.trim() || null,
+      district: v.district.trim(),
+      city: v.city.trim(),
+      state: v.state,
+      zipCode: normalizeZip(v.zipCode),
+      // Both or neither. On an edit, leaving them out would clear the position.
+      latitude: point?.latitude ?? null,
+      longitude: point?.longitude ?? null,
+    };
+    const target = asNew ? null : this.address();
+    const saved = await this.request.run(() =>
+      firstValueFrom(target ? this.addresses.update(target.id, payload) : this.addresses.create(payload)),
     );
-    if (address) {
-      await this.modals.dismiss(address, 'created');
+    if (saved) {
+      await this.modals.dismiss(saved, target ? 'updated' : 'created');
     }
   }
 }

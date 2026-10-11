@@ -5,6 +5,7 @@ import { AddressesService } from '../../core/api/addresses.service';
 import { Address } from '../../core/models';
 import { completeRefresh } from '../../core/ui/refresher';
 import { createRequestState } from '../../core/ui/request-state';
+import { ConfirmService } from '../../core/ui/confirm.service';
 import { ToastService } from '../../core/ui/toast.service';
 import { areaLine, formatZip, streetLine } from '../../core/util/address-format';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
@@ -42,6 +43,7 @@ import { AddressSheetComponent } from './address-sheet.component';
         </app-hero>
 
         <app-problem-alert [error]="load.error()" />
+        <app-problem-alert [error]="action.error()" />
 
         @if (addresses(); as list) {
           @if (list.length === 0 && !load.loading()) {
@@ -68,10 +70,17 @@ import { AddressSheetComponent } from './address-sheet.component';
                 <p class="muted small">{{ area(address) }} · {{ zip(address) }}</p>
                 @if (!hasPosition(address)) {
                   <p class="field-hint">
-                    Sem posição, este endereço não entra na rota desenhada. Ainda não dá para editar um endereço:
-                    cadastre-o de novo usando "Localizar no mapa".
+                    Sem posição, este endereço não entra na rota desenhada. Edite-o e use "Localizar no mapa".
                   </p>
                 }
+                <div class="row">
+                  <button class="btn btn--ghost btn--sm" type="button" [disabled]="busy() !== null" (click)="openSheet(address)">
+                    Editar
+                  </button>
+                  <button class="btn btn--danger-outline btn--sm" type="button" [disabled]="busy() !== null" (click)="remove(address)">
+                    <ion-icon name="trash-outline" aria-hidden="true" /> Excluir
+                  </button>
+                </div>
               </article>
             }
           </div>
@@ -86,8 +95,12 @@ export class AddressesPage {
   private readonly api = inject(AddressesService);
   private readonly modals = inject(ModalController);
   private readonly toast = inject(ToastService);
+  private readonly confirm = inject(ConfirmService);
 
   protected readonly load = createRequestState();
+  protected readonly action = createRequestState();
+  /** The address with a call in flight, so its buttons (and the others') lock. */
+  protected readonly busy = signal<string | null>(null);
   protected readonly addresses = signal<Address[] | null>(null);
 
   protected readonly street = streetLine;
@@ -104,17 +117,43 @@ export class AddressesPage {
     completeRefresh(event);
   }
 
-  protected async openSheet(): Promise<void> {
+  protected async remove(address: Address): Promise<void> {
+    const confirmed = await this.confirm.confirm({
+      header: 'Excluir endereço?',
+      message: `"${address.label}" sai da sua lista. Fretes já concluídos continuam com o histórico.`,
+      confirmText: 'Excluir',
+      cancelText: 'Manter',
+      destructive: true,
+    });
+    if (!confirmed) {
+      return;
+    }
+    this.busy.set(address.id);
+    const done = await this.action.run(async () => {
+      await firstValueFrom(this.api.delete(address.id));
+      return true;
+    });
+    this.busy.set(null);
+    if (done) {
+      await this.toast.show('Endereço excluído.');
+    }
+    // After address.in_active_use / not_found / request.conflict the list shows what is really there.
+    await this.reload();
+  }
+
+  protected async openSheet(address: Address | null = null): Promise<void> {
+    this.action.clearError();
     const sheet = await this.modals.create({
       component: AddressSheetComponent,
+      componentProps: { address },
       breakpoints: [0, 0.95],
       initialBreakpoint: 0.95,
       cssClass: 'sheet',
     });
     await sheet.present();
     const { role } = await sheet.onDidDismiss();
-    if (role === 'created') {
-      await this.toast.show('Endereço salvo.');
+    if (role === 'created' || role === 'updated') {
+      await this.toast.show(role === 'created' ? 'Endereço salvo.' : 'Endereço atualizado.');
       await this.reload();
     }
   }

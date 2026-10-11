@@ -14,4 +14,13 @@ export class AddressesService {
   create(request: CreateAddressRequest): Observable<Address> {
     return this.api.post<Address>('/addresses', request);
   }
+
+  /** Replaces every field. Send the position again (both coordinates) or it is cleared. */
+  update(addressId: string, request: CreateAddressRequest): Observable<Address> {
+    return this.api.put<Address>(`/addresses/${addressId}`, request);
+  }
+
+  delete(addressId: string): Observable<void> {
+    return this.api.delete<void>(`/addresses/${addressId}`);
+  }
 }

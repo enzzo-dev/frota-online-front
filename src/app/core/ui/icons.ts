@@ -30,6 +30,11 @@ import {
   refreshOutline,
   timeOutline,
   trashOutline,
+  lockClosedOutline,
+  logoApple,
+  qrCodeOutline,
+  linkOutline,
+  checkmarkCircle,
 } from 'ionicons/icons';
 
 /** Registers every icon the app uses by name, once, at start-up. */
@@ -65,5 +70,10 @@ export function registerIcons(): void {
     'refresh-outline': refreshOutline,
     'time-outline': timeOutline,
     'trash-outline': trashOutline,
+    'lock-closed-outline': lockClosedOutline,
+    'logo-apple': logoApple,
+    'qr-code-outline': qrCodeOutline,
+    'link-outline': linkOutline,
+    'checkmark-circle': checkmarkCircle,
   });
 }

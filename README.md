@@ -69,6 +69,15 @@ npm run build      # production build in dist/
 - Admin: driver review has **Abrir** on each file (`GET /admin/drivers/{id}/files/{fileId}/url`, link valid for 10 minutes).
 - Input masks (`appMask` directive, `core/util/masks.ts`): phone `(11) 99999-8888` and CPF/CNPJ (alphanumeric CNPJ included).
   The API still receives clean values.
+- Card and Apple Pay (customer, `features/customer/delivery-payment.component.ts`): the payment panel of a delivered freight
+  has three methods. **Pix** as before. **Cartão**: saved cards (`GET/DELETE /customer/cards`) or a new one, with a live card
+  that turns over on the CVV (`shared/components/credit-card.component.ts`, brand, Luhn and expiry checks in
+  `core/util/card.ts`); `POST /deliveries/{id}/card`. The number and CVV are cleared from memory right after the request. A
+  `Pending` result keeps the page polling until the webhook settles it; `Failed` offers another try. **Apple Pay**:
+  `POST /deliveries/{id}/wallet`. The token comes from the iOS shell through `window.FrotaWallet` (`tokenize(amount)`, see
+  `core/payments/wallet-token.provider.ts`); in a browser the option stays disabled ("só no app iOS").
+- Driver: **Assinatura e recebimento** also connects the Mercado Pago account (`/driver/wallet-account`): opens the
+  authorization link and polls until the callback saves the connection; can disconnect.
 - The admin "settle fee" screen was left out: the Pix flow settles fees by itself.
 
 ### What the API still lacks

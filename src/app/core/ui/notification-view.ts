@@ -24,6 +24,7 @@ export const NOTIFICATION_LOOK: Readonly<Record<NotificationType, NotificationLo
   FeeSettled: { icon: 'document-text-outline', tone: 'dark' },
   NewFreightAvailable: { icon: 'cube-outline', tone: 'red' },
   SubscriptionActivated: { icon: 'ribbon-outline', tone: 'red' },
+  PaymentFailed: { icon: 'alert-circle-outline', tone: 'red' },
 };
 
 /** Where a tap on a notification goes, by what it points at and who is reading. `null`: nothing to open. */

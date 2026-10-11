@@ -70,3 +70,63 @@ export interface DownloadUrl {
   url: string;
   expiresAt: string;
 }
+
+/** What the customer types for a new card. Sent once to the API, never kept by the app. */
+export interface CardInput {
+  holderName: string;
+  number: string;
+  expiryMonth: string;
+  expiryYear: string;
+  ccv: string;
+}
+
+export interface CardHolderInput {
+  taxId: string;
+  postalCode: string;
+  addressNumber: string;
+  phone: string | null;
+}
+
+/** A saved card (brand and last four digits only) or a new one, never both. */
+export interface PayWithCardRequest {
+  savedCardId?: string;
+  card?: CardInput;
+  holder?: CardHolderInput;
+  saveCard: boolean;
+}
+
+export interface CardPayment {
+  paymentId: string;
+  deliveryId: string;
+  amount: number;
+  driverReceives: number;
+  platformFee: number;
+  status: PaymentStatus;
+  brand: string | null;
+  last4: string | null;
+  cardSaved: boolean;
+}
+
+export interface SavedCard {
+  id: string;
+  brand: string;
+  last4: string;
+}
+
+export interface WalletPayment {
+  paymentId: string;
+  deliveryId: string;
+  amount: number;
+  driverReceives: number;
+  platformFee: number;
+  status: PaymentStatus;
+  providerStatus: string;
+}
+
+export interface WalletAccount {
+  connected: boolean;
+}
+
+export interface WalletAuthorization {
+  authorizationUrl: string;
+}

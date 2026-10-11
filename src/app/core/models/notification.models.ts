@@ -16,7 +16,8 @@ export type NotificationType =
   | 'FeeSettled'
   | 'NewFreightAvailable'
   | 'PaymentReceived'
-  | 'SubscriptionActivated';
+  | 'SubscriptionActivated'
+  | 'PaymentFailed';
 
 /** What the app opens when the person taps a notification. */
 export type NotificationTarget = 'Freight' | 'Proposal' | 'Delivery' | 'DriverProfile' | 'Fee' | 'Subscription';

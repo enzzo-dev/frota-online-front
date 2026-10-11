@@ -40,3 +40,9 @@ export function maskTaxId(value: string): string {
     .filter(Boolean)
     .join('');
 }
+
+/** `01310100` -> `01310-100`. */
+export function maskZip(value: string): string {
+  const d = value.replace(/\D/g, '').slice(0, 8);
+  return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+}

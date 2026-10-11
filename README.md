@@ -34,6 +34,7 @@ npm run build      # production build in dist/
 - Map: **Leaflet** on **OpenStreetMap** tiles (no API key), in `shared/components/map-view.component.ts`. Leaflet is
   loaded on first use (lazy chunk), so screens without a map do not pay for it. Keep the OSM attribution.
   The public tile server is for light use; use a hosted tile provider in production.
+- CEP: `core/api/zip-lookup.service.ts` fills street, district, city and state from ViaCEP when the CEP has 8 digits.
 - Geocoding: the API does not geocode. `core/api/geocoding.service.ts` asks **Nominatim** only when the customer taps
   "Localizar no mapa" (at most 1 request per second, per its usage policy) and sends `latitude` and `longitude` together.
   Use a hosted geocoder for production volume.

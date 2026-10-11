@@ -17,6 +17,7 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { AddressesService } from '../../core/api/addresses.service';
 import { GeocodingService } from '../../core/api/geocoding.service';
+import { ZipLookupService } from '../../core/api/zip-lookup.service';
 import { Address, CreateAddressRequest, GeoPoint } from '../../core/models';
 import { BRAZILIAN_STATES } from '../../core/ui/labels';
 import { createRequestState } from '../../core/ui/request-state';
@@ -95,6 +96,20 @@ import { notBlank, zipCode } from '../../shared/forms/validators';
             }
           </ion-select>
         </div>
+        @switch (zipState()) {
+          @case ('searching') {
+            <p class="field-hint zip-hint"><ion-spinner name="crescent" /> Buscando o endereço pelo CEP...</p>
+          }
+          @case ('filled') {
+            <p class="field-hint">Preenchemos o endereço pelo CEP. Confira e informe o número.</p>
+          }
+          @case ('notfound') {
+            <p class="field-hint">Não encontramos esse CEP. Preencha o endereço à mão.</p>
+          }
+          @case ('error') {
+            <p class="field-hint">O serviço de CEP não respondeu. Preencha o endereço à mão.</p>
+          }
+        }
         <ion-input
           formControlName="street"
           label="Rua"
@@ -195,6 +210,15 @@ import { notBlank, zipCode } from '../../shared/forms/validators';
     </ion-content>
   `,
   styles: `
+    .zip-hint {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .zip-hint ion-spinner {
+      width: 16px;
+      height: 16px;
+    }
     .geo-title {
       font-size: 1rem;
     }
@@ -211,6 +235,7 @@ export class AddressSheetComponent implements OnInit {
   private readonly addresses = inject(AddressesService);
   private readonly modals = inject(ModalController);
   private readonly geocoder = inject(GeocodingService);
+  private readonly zipLookup = inject(ZipLookupService);
 
   protected readonly states = BRAZILIAN_STATES;
   protected readonly request = createRequestState();
@@ -229,6 +254,7 @@ export class AddressSheetComponent implements OnInit {
   /** Where the address is on the map. Both coordinates or none: the API rejects only one of them. */
   protected readonly position = signal<GeoPoint | null>(null);
   protected readonly locating = signal(false);
+  protected readonly zipState = signal<'idle' | 'searching' | 'filled' | 'notfound' | 'error'>('idle');
   protected readonly geoState = signal<'idle' | 'incomplete' | 'notfound' | 'error'>('idle');
 
   protected async locate(): Promise<void> {
@@ -266,11 +292,62 @@ export class AddressSheetComponent implements OnInit {
     this.geoState.set('idle');
   }
 
+  /** The last CEP looked up (or the one loaded for editing), so the same CEP is not fetched twice. */
+  private lastZip = '';
+  private zipToken = 0;
+
+  constructor() {
+    this.form.controls.zipCode.valueChanges.subscribe((value) => void this.onZipChange(value));
+  }
+
+  /** Fills street, district, city and state once the CEP has its 8 digits. Never blocks: the fields stay editable. */
+  private async onZipChange(value: string): Promise<void> {
+    const zip = normalizeZip(value);
+    if (zip.length !== 8) {
+      this.zipToken += 1;
+      this.zipState.set('idle');
+      return;
+    }
+    if (zip === this.lastZip) {
+      return;
+    }
+    this.lastZip = zip;
+    const token = (this.zipToken += 1);
+    this.zipState.set('searching');
+    try {
+      const found = await this.zipLookup.lookup(zip);
+      if (token !== this.zipToken) {
+        return;
+      }
+      if (!found) {
+        this.zipState.set('notfound');
+        return;
+      }
+      // Only what the CEP knows: a city with a single CEP has no street, so the typed one is kept.
+      const patch: Partial<{ street: string; district: string; city: string; state: string }> = {};
+      if (found.street) patch.street = found.street;
+      if (found.district) patch.district = found.district;
+      if (found.city) patch.city = found.city;
+      if (found.state && this.states.includes(found.state)) patch.state = found.state;
+      this.form.patchValue(patch);
+      // The pin belonged to the old address.
+      this.position.set(null);
+      this.geoState.set('idle');
+      this.zipState.set('filled');
+    } catch {
+      if (token === this.zipToken) {
+        this.zipState.set('error');
+      }
+    }
+  }
+
   ngOnInit(): void {
     const current = this.address();
     if (!current) {
       return;
     }
+    // Editing starts from a saved address: do not overwrite it by looking its CEP up again.
+    this.lastZip = normalizeZip(current.zipCode);
     this.form.patchValue({
       label: current.label,
       street: current.street,

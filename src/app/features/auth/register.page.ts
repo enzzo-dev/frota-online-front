@@ -3,10 +3,9 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import {
   IonContent,
+  IonIcon,
   IonInput,
   IonInputPasswordToggle,
-  IonSegment,
-  IonSegmentButton,
   IonSpinner,
 } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
@@ -28,10 +27,9 @@ type SignUpRole = RegisterRequest['role'];
     ReactiveFormsModule,
     RouterLink,
     IonContent,
+    IonIcon,
     IonInput,
     IonInputPasswordToggle,
-    IonSegment,
-    IonSegmentButton,
     IonSpinner,
     HeroComponent,
     ProblemAlertComponent,
@@ -46,16 +44,32 @@ type SignUpRole = RegisterRequest['role'];
           title="Crie sua conta em um minuto."
           lede="Cliente pede o frete. Motorista carrega e escolhe o próprio preço."
         />
+        <ul class="auth__perks">
+          <li><ion-icon name="pricetag-outline" aria-hidden="true" /> Motorista escolhe o próprio preço</li>
+          <li><ion-icon name="map-outline" aria-hidden="true" /> Acompanhe a rota e a entrega no mapa</li>
+          <li><ion-icon name="shield-checkmark-outline" aria-hidden="true" /> Pagamento confirmado a cada etapa</li>
+        </ul>
 
-        <form class="stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-          <div class="stack">
-            <strong class="small">Eu quero</strong>
-            <ion-segment [value]="role()" (ionChange)="onRoleChange($event.detail.value)">
-              <ion-segment-button value="Customer">Pedir fretes</ion-segment-button>
-              <ion-segment-button value="Driver">Carregar fretes</ion-segment-button>
-            </ion-segment>
+        <form class="auth__form stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <div class="auth__head">
+            <h2>Criar conta</h2>
+            <p>Escolha como você vai usar o Frota Online.</p>
           </div>
 
+          <div class="auth__role" role="group" aria-label="Eu quero">
+            <button type="button" [attr.aria-pressed]="role() === 'Customer'" (click)="onRoleChange('Customer')">
+              <ion-icon name="cube-outline" aria-hidden="true" />
+              <strong>Pedir fretes</strong>
+              <span>Sou cliente e preciso enviar carga</span>
+            </button>
+            <button type="button" [attr.aria-pressed]="role() === 'Driver'" (click)="onRoleChange('Driver')">
+              <ion-icon name="navigate-outline" aria-hidden="true" />
+              <strong>Carregar fretes</strong>
+              <span>Sou motorista e defino meu preço</span>
+            </button>
+          </div>
+
+          <div class="auth__fields">
           <ion-input
             formControlName="fullName"
             label="Nome completo"
@@ -101,6 +115,7 @@ type SignUpRole = RegisterRequest['role'];
           >
             <ion-input-password-toggle slot="end" />
           </ion-input>
+          </div>
 
           @if (terms().length > 0) {
             <div class="notice auth__terms">

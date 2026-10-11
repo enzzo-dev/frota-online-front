@@ -3,6 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   IonContent,
+  IonIcon,
   IonInput,
   IonInputPasswordToggle,
   IonSpinner,
@@ -20,6 +21,7 @@ import { notBlank } from '../../shared/forms/validators';
     ReactiveFormsModule,
     RouterLink,
     IonContent,
+    IonIcon,
     IonInput,
     IonInputPasswordToggle,
     IonSpinner,
@@ -36,8 +38,13 @@ import { notBlank } from '../../shared/forms/validators';
           title="O motorista define o preço. Aqui o frete anda."
           lede="Entre para pedir um frete ou para carregar um."
         />
+        <ul class="auth__perks">
+          <li><ion-icon name="pricetag-outline" aria-hidden="true" /> Motorista escolhe o próprio preço</li>
+          <li><ion-icon name="map-outline" aria-hidden="true" /> Acompanhe a rota e a entrega no mapa</li>
+          <li><ion-icon name="shield-checkmark-outline" aria-hidden="true" /> Pagamento confirmado a cada etapa</li>
+        </ul>
 
-        <form class="stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <form class="auth__form stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
           @if (accountDeleted) {
             <div class="notice" role="status">Sua conta foi excluída. Você pode criar uma nova quando quiser.</div>
           }
@@ -45,6 +52,12 @@ import { notBlank } from '../../shared/forms/validators';
             <div class="notice" role="status">Sua sessão expirou. Entre novamente para continuar.</div>
           }
 
+          <div class="auth__head">
+            <h2>Entrar</h2>
+            <p>Use o e-mail e a senha da sua conta.</p>
+          </div>
+
+          <div class="auth__fields">
           <ion-input
             type="email"
             formControlName="email"
@@ -68,6 +81,7 @@ import { notBlank } from '../../shared/forms/validators';
           >
             <ion-input-password-toggle slot="end" />
           </ion-input>
+          </div>
 
           <app-problem-alert [error]="request.error()" />
 

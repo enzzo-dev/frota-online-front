@@ -809,3 +809,29 @@
 .route-line ion-icon {
   color: var(--red);
 }
+
+/* `.stack` lives in _base and `.card`/`.panel` (display: block) come later, which used to cancel the gap.
+   Repeating it here keeps the vertical rhythm inside cards. */
+.stack,
+.card.stack,
+.panel.stack,
+.dark-panel.stack,
+.notice.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card.stack,
+.panel.stack {
+  gap: 14px;
+}
+
+.stack--lg,
+.card.stack--lg {
+  gap: 20px;
+}
+
+.card.stack > .stats {
+  margin: 0;
+}

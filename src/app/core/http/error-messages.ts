@@ -43,6 +43,13 @@ export const ERROR_MESSAGES: Readonly<Record<string, string>> = {
   'proposal.vehicle_not_eligible': 'O veículo não é do tipo pedido ou não comporta o peso.',
 
   'delivery.not_found': 'Entrega não encontrada.',
+  'delivery.stop_out_of_order': 'As paradas seguem a ordem da rota. Conclua primeiro a parada indicada.',
+  'delivery.invalid_proof': 'O comprovante não é válido: use um arquivo de comprovante de entrega seu.',
+  'delivery.invalid_status': 'Essa ação não vale para o status atual da entrega. Atualizamos a tela.',
+  'payment.already_confirmed': 'O pagamento desta entrega já foi confirmado.',
+  'payment.not_delivered': 'O pagamento só pode ser confirmado depois que a entrega for concluída.',
+  'request.duplicate': 'Recebemos o mesmo pedido duas vezes. Atualizamos a tela, confira o resultado.',
+  'route.missing_coordinates': 'Alguns endereços ainda não têm posição no mapa. Edite-os e use "Localizar no mapa".',
 };
 
 export const GENERIC_ERROR_MESSAGE = 'Algo deu errado. Tente novamente.';

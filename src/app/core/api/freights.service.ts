@@ -7,6 +7,7 @@ import {
   Freight,
   FreightStatus,
   RankedProposal,
+  RouteMap,
 } from '../models';
 
 /** What a customer does with their freights. */
@@ -37,5 +38,15 @@ export class FreightsService {
 
   approve(freightId: string, proposalId: string): Observable<ApprovedDelivery> {
     return this.api.post<ApprovedDelivery>(`/freights/${freightId}/proposals/${proposalId}/approve`);
+  }
+
+  /** Distance, time and map of a run that is not published yet. Call it once the addresses are chosen and ordered. */
+  routePreview(addressIds: readonly string[]): Observable<RouteMap> {
+    return this.api.post<RouteMap>('/freights/route-preview', { addressIds });
+  }
+
+  /** The route of a freight already created; every pin carries its stop type. */
+  route(freightId: string): Observable<RouteMap> {
+    return this.api.get<RouteMap>(`/freights/${freightId}/route`);
   }
 }

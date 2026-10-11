@@ -50,6 +50,9 @@ import { AddressSheetComponent } from './address-sheet.component';
               <strong>{{ address.label }}</strong>
               <small>{{ street(address) }}</small>
               <small>{{ area(address) }}</small>
+              @if (address.latitude === null || address.longitude === null) {
+                <small class="no-pos">Sem posição no mapa: a rota não será desenhada</small>
+              }
               @if (usedIds().includes(address.id)) {
                 <small class="choice__note">Já usado em outra parada</small>
               }

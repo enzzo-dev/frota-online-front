@@ -44,6 +44,11 @@ export const DRIVER_ROUTES: Routes = [
   },
   // Pushed over the tabs, full screen, with a back button.
   {
+    path: 'fees',
+    canActivate: [driverApprovedGuard],
+    loadComponent: () => import('./fees.page').then((m) => m.FeesPage),
+  },
+  {
     path: 'deliveries/:id',
     canActivate: [driverApprovedGuard],
     loadComponent: () => import('./delivery-route.page').then((m) => m.DeliveryRoutePage),

@@ -16,6 +16,7 @@ import { FREIGHT_STATUS_VIEW, VEHICLE_TYPE_LABEL } from '../../core/ui/labels';
 import { completeRefresh } from '../../core/ui/refresher';
 import { createRequestState } from '../../core/ui/request-state';
 import { Poller } from '../../core/util/poller';
+import { formatDistance, formatDuration } from '../../core/util/route-format';
 import { CountdownComponent } from '../../shared/components/countdown.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { HeroComponent } from '../../shared/components/hero.component';
@@ -106,6 +107,14 @@ const POLL_MS = 20_000;
                   {{ freight.pickupCount }} {{ freight.pickupCount === 1 ? 'coleta' : 'coletas' }} ·
                   {{ freight.deliveryCount }} {{ freight.deliveryCount === 1 ? 'entrega' : 'entregas' }}
                 </p>
+                @if (distanceOf(freight); as distance) {
+                  <p class="small">
+                    <ion-icon name="navigate-outline" aria-hidden="true" /> {{ distance }}
+                    @if (durationOf(freight); as time) {
+                      · {{ time }}
+                    }
+                  </p>
+                }
                 <p class="small">
                   @if (freight.scheduledPickupAt; as when) {
                     Coleta em <strong>{{ when | utc | date: "dd/MM 'às' HH:mm" }}</strong>
@@ -136,6 +145,9 @@ const POLL_MS = 20_000;
   `,
 })
 export class FreightsPage {
+  protected readonly distanceOf = (freight: Freight) => formatDistance(freight.routeDistanceMeters);
+  protected readonly durationOf = (freight: Freight) => formatDuration(freight.routeDurationSeconds);
+
   private readonly freightsApi = inject(FreightsService);
 
   protected readonly statusView = FREIGHT_STATUS_VIEW;

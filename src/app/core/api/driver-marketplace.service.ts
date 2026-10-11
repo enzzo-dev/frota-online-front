@@ -2,10 +2,16 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiClient } from '../http/api-client';
 import {
+  CancelDeliveryRequest,
+  CompleteStopRequest,
+  ConfirmPaymentRequest,
+  DeliveryProgress,
   DeliveryRoute,
   DriverDeliverySummary,
   OpenFreight,
+  PaymentResponse,
   Proposal,
+  RouteMap,
   RouteView,
   SubmitProposalRequest,
 } from '../models';
@@ -37,5 +43,30 @@ export class DriverMarketplaceService {
 
   route(deliveryId: string, view: RouteView): Observable<DeliveryRoute> {
     return this.api.get<DeliveryRoute>(`/driver/deliveries/${deliveryId}/route`, { view });
+  }
+
+  /** Exact pins and path of a delivery the driver won. */
+  routeMap(deliveryId: string): Observable<RouteMap> {
+    return this.api.get<RouteMap>(`/driver/deliveries/${deliveryId}/map`);
+  }
+
+  start(deliveryId: string): Observable<DeliveryProgress> {
+    return this.api.post<DeliveryProgress>(`/driver/deliveries/${deliveryId}/start`);
+  }
+
+  completeStop(deliveryId: string, stopId: string, request: CompleteStopRequest): Observable<DeliveryProgress> {
+    return this.api.post<DeliveryProgress>(`/driver/deliveries/${deliveryId}/stops/${stopId}/complete`, request);
+  }
+
+  reportIncident(deliveryId: string, note: string): Observable<DeliveryProgress> {
+    return this.api.post<DeliveryProgress>(`/driver/deliveries/${deliveryId}/incident`, { note });
+  }
+
+  cancel(deliveryId: string, request: CancelDeliveryRequest): Observable<DeliveryProgress> {
+    return this.api.post<DeliveryProgress>(`/driver/deliveries/${deliveryId}/cancel`, request);
+  }
+
+  confirmPayment(deliveryId: string, request: ConfirmPaymentRequest): Observable<PaymentResponse> {
+    return this.api.post<PaymentResponse>(`/driver/deliveries/${deliveryId}/payment`, request);
   }
 }

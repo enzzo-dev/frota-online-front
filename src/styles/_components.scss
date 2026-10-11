@@ -730,6 +730,10 @@
   gap: 10px;
 }
 
+.stats--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .stat {
   background: var(--panel);
   border-radius: var(--r-md);
@@ -791,4 +795,17 @@
   background: var(--red);
   border-color: var(--red);
   color: var(--white);
+}
+
+/* Distance and time under a freight card. */
+.route-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.route-line ion-icon {
+  color: var(--red);
 }

@@ -3,6 +3,7 @@ import type { TabItem } from '../shell/tabs-shell.component';
 
 const CUSTOMER_TABS: readonly TabItem[] = [
   { tab: 'freights', label: 'Fretes', icon: 'cube-outline' },
+  { tab: 'deliveries', label: 'Entregas', icon: 'navigate-outline' },
   { tab: 'addresses', label: 'Endereços', icon: 'location-outline' },
   { tab: 'account', label: 'Conta', icon: 'person-circle-outline' },
 ];
@@ -18,6 +19,10 @@ export const CUSTOMER_ROUTES: Routes = [
     loadComponent: () => import('./freight-detail.page').then((m) => m.FreightDetailPage),
   },
   {
+    path: 'deliveries/:id',
+    loadComponent: () => import('./delivery-tracking.page').then((m) => m.DeliveryTrackingPage),
+  },
+  {
     path: '',
     loadComponent: () => import('../shell/tabs-shell.component').then((m) => m.TabsShellComponent),
     data: { tabs: CUSTOMER_TABS },
@@ -25,6 +30,10 @@ export const CUSTOMER_ROUTES: Routes = [
       {
         path: 'freights',
         loadComponent: () => import('./freights.page').then((m) => m.FreightsPage),
+      },
+      {
+        path: 'deliveries',
+        loadComponent: () => import('./deliveries.page').then((m) => m.CustomerDeliveriesPage),
       },
       {
         path: 'addresses',

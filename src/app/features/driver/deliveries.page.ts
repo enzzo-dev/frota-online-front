@@ -3,8 +3,9 @@ import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@a
 import { RouterLink } from '@angular/router';
 import { IonContent, IonRefresher, IonRefresherContent } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
+import { DriverFeesService } from '../../core/api/driver-fees.service';
 import { DriverMarketplaceService } from '../../core/api/driver-marketplace.service';
-import { DriverDeliverySummary } from '../../core/models';
+import { DriverDeliverySummary, FeeStatement } from '../../core/models';
 import { DELIVERY_STATUS_VIEW } from '../../core/ui/labels';
 import { completeRefresh } from '../../core/ui/refresher';
 import { createRequestState } from '../../core/ui/request-state';
@@ -40,10 +41,20 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
       <div class="page page--wide">
         <app-hero
           title="Minhas corridas"
-          lede="Fretes que você ganhou. Abra uma corrida para ver as paradas com o endereço completo."
+          lede="Fretes que você ganhou. Abra uma corrida para iniciar, concluir as paradas e confirmar o pagamento."
         />
 
         <app-problem-alert [error]="load.error()" />
+
+        @if (fees(); as statement) {
+          <a class="card card--link row row--between" routerLink="/driver/fees">
+            <div>
+              <p class="muted small">Taxas da plataforma em aberto</p>
+              <p class="price price--lg">{{ statement.balance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</p>
+            </div>
+            <span class="link-btn">Ver extrato</span>
+          </a>
+        }
 
         @if (deliveries(); as list) {
           @if (list.length === 0 && !load.loading()) {
@@ -85,6 +96,8 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
 })
 export class DeliveriesPage {
   private readonly marketplace = inject(DriverMarketplaceService);
+  private readonly feesApi = inject(DriverFeesService);
+  protected readonly fees = signal<FeeStatement | null>(null);
 
   protected readonly statusView = DELIVERY_STATUS_VIEW;
   protected readonly load = createRequestState();
@@ -112,6 +125,12 @@ export class DeliveriesPage {
     const list = await this.load.run(() => firstValueFrom(this.marketplace.deliveries()));
     if (list) {
       this.raw.set(list);
+    }
+    // The balance is a convenience here; the fees page shows its own errors.
+    try {
+      this.fees.set(await firstValueFrom(this.feesApi.statement()));
+    } catch {
+      this.fees.set(null);
     }
   }
 }

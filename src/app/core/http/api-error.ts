@@ -70,10 +70,13 @@ export class ApiError extends Error {
       code = codeFromStatus(error.status);
     }
 
-    const message = ERROR_MESSAGES[code] ?? detail ?? GENERIC_ERROR_MESSAGE;
+    // The server's text names the addresses involved, so it beats the generic one for these codes.
+    const message = (DETAIL_FIRST.has(code) ? detail : null) ?? ERROR_MESSAGES[code] ?? detail ?? GENERIC_ERROR_MESSAGE;
     return new ApiError(error.status, code, message, fieldErrors);
   }
 }
+
+const DETAIL_FIRST: ReadonlySet<string> = new Set(['route.missing_coordinates']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);

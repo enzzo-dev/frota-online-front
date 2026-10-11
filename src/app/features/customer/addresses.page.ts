@@ -58,9 +58,20 @@ import { AddressSheetComponent } from './address-sheet.component';
               <article class="card stack">
                 <div class="row row--between">
                   <h3>{{ address.label }}</h3>
+                  @if (hasPosition(address)) {
+                    <span class="chip chip--outline"><ion-icon name="location-outline" aria-hidden="true" /> No mapa</span>
+                  } @else {
+                    <span class="chip chip--muted">Sem posição</span>
+                  }
                 </div>
                 <p class="small">{{ street(address) }}</p>
                 <p class="muted small">{{ area(address) }} · {{ zip(address) }}</p>
+                @if (!hasPosition(address)) {
+                  <p class="field-hint">
+                    Sem posição, este endereço não entra na rota desenhada. Ainda não dá para editar um endereço:
+                    cadastre-o de novo usando "Localizar no mapa".
+                  </p>
+                }
               </article>
             }
           </div>
@@ -81,6 +92,7 @@ export class AddressesPage {
 
   protected readonly street = streetLine;
   protected readonly area = areaLine;
+  protected readonly hasPosition = (address: Address) => address.latitude !== null && address.longitude !== null;
   protected readonly zip = (address: Address) => formatZip(address.zipCode);
 
   ionViewWillEnter(): void {

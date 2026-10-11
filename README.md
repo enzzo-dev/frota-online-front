@@ -30,6 +30,26 @@ npm run build      # production build in dist/
 - `FileUploader`: the API has no upload endpoint yet, so the default only registers file metadata
   (`POST /driver/documents`). Provide a real uploader when the endpoint exists.
 
+## Maps, routes and deliveries
+- Map: **Leaflet** on **OpenStreetMap** tiles (no API key), in `shared/components/map-view.component.ts`. Leaflet is
+  loaded on first use (lazy chunk), so screens without a map do not pay for it. Keep the OSM attribution.
+  The public tile server is for light use; use a hosted tile provider in production.
+- Geocoding: the API does not geocode. `core/api/geocoding.service.ts` asks **Nominatim** only when the customer taps
+  "Localizar no mapa" (at most 1 request per second, per its usage policy) and sends `latitude` and `longitude` together.
+  Use a hosted geocoder for production volume.
+- Route preview: `POST /freights/route-preview` runs in the freight wizard as soon as the addresses are chosen.
+  `distanceMeters`/`durationSeconds` null with an empty `path` is not an error: pins plus a straight line are drawn.
+- Driver board shows `routeDistanceMeters`/`routeDurationSeconds` and approximate pins (about 1 km, never the street).
+- Delivery flow (driver): start, complete stops in order (note, place, proof), incident, cancel, confirm payment, fee statement.
+  Customer tracking polls every 5 seconds while the delivery is running (no push/websocket in the API yet).
+
+### What the API still lacks
+- No upload endpoint (pre-signed URL) for delivery proofs and documents: `FileUploader` only registers metadata.
+- No way to edit or delete a saved address, so an address without position can only be replaced by a new one.
+- No endpoint for "the delivery of this freight": the app matches `GET /deliveries` by `freightRequestId`.
+- No live driver position for the customer, and no push/websocket (polling only).
+- CORS is not configured (see Configuration).
+
 ## Privacy (LGPD)
 `/privacy` (Account → "Privacidade e meus dados") uses `GET /me/data` to download everything held about the
 user as JSON, and `POST /me/deletion` (password + confirm) to anonymize the account. After a successful deletion

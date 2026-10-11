@@ -1,10 +1,12 @@
 import { CurrencyPipe, DatePipe, DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { IonContent, IonRefresher, IonRefresherContent } from '@ionic/angular';
+import { IonContent, IonIcon, IonRefresher, IonRefresherContent } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
+import { CustomerDeliveriesService } from '../../core/api/customer-deliveries.service';
 import { FreightsService } from '../../core/api/freights.service';
-import { ApprovedDelivery, Freight, RankedProposal } from '../../core/models';
+import { ApiError } from '../../core/http/api-error';
+import { ApprovedDelivery, Freight, RankedProposal, RouteMap } from '../../core/models';
 import { FREIGHT_STATUS_VIEW, VEHICLE_TYPE_LABEL } from '../../core/ui/labels';
 import { ConfirmService } from '../../core/ui/confirm.service';
 import { completeRefresh } from '../../core/ui/refresher';
@@ -16,6 +18,7 @@ import { CountdownComponent } from '../../shared/components/countdown.component'
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { PageBarComponent } from '../../shared/components/page-bar.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
+import { RouteMapCardComponent } from '../../shared/components/route-map-card.component';
 import { StatusChipComponent } from '../../shared/components/status-chip.component';
 import { StopsRouteComponent } from '../../shared/components/stops-route.component';
 import { UtcPipe } from '../../shared/pipes/utc.pipe';
@@ -31,12 +34,14 @@ const POLL_MS = 10_000;
     DecimalPipe,
     RouterLink,
     IonContent,
+    IonIcon,
     IonRefresher,
     IonRefresherContent,
     CountdownComponent,
     EmptyStateComponent,
     PageBarComponent,
     ProblemAlertComponent,
+    RouteMapCardComponent,
     StatusChipComponent,
     StopsRouteComponent,
     UtcPipe,
@@ -111,8 +116,15 @@ const POLL_MS = 10_000;
             <p class="notice">Este frete já foi aprovado e o motorista está agendado.</p>
           }
 
+          @if (f.status === 'Approved' && trackingId(); as id) {
+            <a class="btn btn--block" [routerLink]="['/customer/deliveries', id]">
+              <ion-icon name="navigate-outline" aria-hidden="true" /> Acompanhar a entrega
+            </a>
+          }
+
           <section class="stack">
             <h2>Rota</h2>
+            <app-route-map-card [route]="route()" [loading]="routeLoading()" [error]="routeError()" />
             <app-stops-route [stops]="stops()" />
           </section>
 
@@ -179,6 +191,7 @@ const POLL_MS = 10_000;
 })
 export class FreightDetailPage {
   private readonly freightsApi = inject(FreightsService);
+  private readonly deliveriesApi = inject(CustomerDeliveriesService);
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
   private readonly freightId = inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
@@ -194,12 +207,19 @@ export class FreightDetailPage {
   /** Only known right after approving here; later visits show the approved notice without the numbers. */
   protected readonly delivery = signal<ApprovedDelivery | null>(null);
 
+  protected readonly route = signal<RouteMap | null>(null);
+  protected readonly routeLoading = signal(false);
+  protected readonly routeError = signal<ApiError | null>(null);
+  /** The delivery created when this freight was approved, found through the customer's delivery list. */
+  protected readonly trackingId = signal<string | null>(null);
+
   protected readonly stops = computed(() => fromFreightStops(this.freight()?.stops ?? []));
 
   private readonly poller = new Poller(() => this.reload(), POLL_MS);
 
   ionViewWillEnter(): void {
     void this.load.run(() => this.reload());
+    void this.loadRoute();
     this.poller.start();
   }
 
@@ -209,6 +229,7 @@ export class FreightDetailPage {
 
   protected async refresh(event: Event): Promise<void> {
     await this.load.run(() => this.reload());
+    await this.loadRoute();
     completeRefresh(event);
   }
 
@@ -257,9 +278,28 @@ export class FreightDetailPage {
     }
   }
 
+  /** Loaded on entering, not on every poll: the route of a created freight does not change. */
+  private async loadRoute(): Promise<void> {
+    this.routeLoading.set(true);
+    this.routeError.set(null);
+    try {
+      this.route.set(await firstValueFrom(this.freightsApi.route(this.freightId)));
+    } catch (caught) {
+      this.route.set(null);
+      this.routeError.set(ApiError.from(caught));
+    } finally {
+      this.routeLoading.set(false);
+    }
+  }
+
   private async reload(): Promise<void> {
     const freight = await firstValueFrom(this.freightsApi.get(this.freightId));
     this.freight.set(freight);
+    if (freight.status === 'Approved' && this.trackingId() === null) {
+      // There is no "delivery of this freight" endpoint: match it in the customer's delivery list.
+      const deliveries = await firstValueFrom(this.deliveriesApi.list());
+      this.trackingId.set(deliveries.find((d) => d.freightRequestId === freight.id)?.deliveryId ?? null);
+    }
     this.proposals.set(
       freight.status === 'Open' ? await firstValueFrom(this.freightsApi.proposals(freight.id)) : [],
     );

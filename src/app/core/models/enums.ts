@@ -37,3 +37,12 @@ export type TermType = (typeof TERM_TYPES)[number];
 
 export const ROUTE_VIEWS = ['Full', 'Next'] as const;
 export type RouteView = (typeof ROUTE_VIEWS)[number];
+
+export const PAYMENT_METHODS = ['Pix', 'Cash', 'Card', 'Other'] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export const PAYMENT_STATUSES = ['Pending', 'Paid', 'Failed'] as const;
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+
+export const FEE_ENTRY_TYPES = ['FeeAccrued', 'FeeSettled'] as const;
+export type FeeEntryType = (typeof FEE_ENTRY_TYPES)[number];

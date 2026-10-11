@@ -52,6 +52,9 @@ export interface Freight {
   stops: FreightStop[];
   approvedProposalId: string | null;
   pendingProposals: number;
+  /** Null while the routing engine is out or an address has no position. */
+  routeDistanceMeters: number | null;
+  routeDurationSeconds: number | null;
   createdAt: string;
 }
 
@@ -86,6 +89,9 @@ export interface OpenStop {
   district: string;
   city: string;
   state: string;
+  /** Rounded to about 1 km on purpose: marks the region, never the street. */
+  approxLatitude: number | null;
+  approxLongitude: number | null;
   items: FreightItem[];
 }
 
@@ -98,6 +104,8 @@ export interface OpenFreight {
   proposalDeadline: string;
   pickupCount: number;
   deliveryCount: number;
+  routeDistanceMeters: number | null;
+  routeDurationSeconds: number | null;
   stops: OpenStop[];
 }
 

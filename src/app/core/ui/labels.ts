@@ -3,6 +3,8 @@ import {
   DriverStatus,
   FreightStatus,
   MediaKind,
+  PaymentMethod,
+  PaymentStatus,
   ProposalStatus,
   StopType,
   TermType,
@@ -81,6 +83,19 @@ export const DELIVERY_STATUS_VIEW: Readonly<Record<DeliveryStatus, StatusView>> 
   Delivered: { label: 'Entregue', tone: 'red' },
   Cancelled: { label: 'Cancelada', tone: 'muted' },
   Incident: { label: 'Ocorrência', tone: 'deep' },
+};
+
+export const PAYMENT_METHOD_LABEL: Readonly<Record<PaymentMethod, string>> = {
+  Pix: 'Pix',
+  Cash: 'Dinheiro',
+  Card: 'Cartão',
+  Other: 'Outro',
+};
+
+export const PAYMENT_STATUS_VIEW: Readonly<Record<PaymentStatus, StatusView>> = {
+  Pending: { label: 'Pagamento pendente', tone: 'outline' },
+  Paid: { label: 'Pago', tone: 'red' },
+  Failed: { label: 'Pagamento falhou', tone: 'deep' },
 };
 
 /** Brazilian states (UF), for the address form. */

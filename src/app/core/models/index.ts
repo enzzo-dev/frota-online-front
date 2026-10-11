@@ -6,3 +6,5 @@ export * from './driver.models';
 export * from './marketplace.models';
 export * from './admin.models';
 export * from './privacy.models';
+export * from './routing.models';
+export * from './delivery.models';

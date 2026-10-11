@@ -18,10 +18,12 @@ import { createRequestState } from '../../core/ui/request-state';
 import { ToastService } from '../../core/ui/toast.service';
 import { Poller } from '../../core/util/poller';
 import { toUtcMillis } from '../../core/util/dates';
+import { formatDistance, formatDuration } from '../../core/util/route-format';
 import { StopView, fromOpenStops } from '../../core/util/stop-views';
 import { CountdownComponent } from '../../shared/components/countdown.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { HeroComponent } from '../../shared/components/hero.component';
+import { MapPin, MapViewComponent } from '../../shared/components/map-view.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
 import { StopsRouteComponent } from '../../shared/components/stops-route.component';
 import { UtcPipe } from '../../shared/pipes/utc.pipe';
@@ -30,9 +32,26 @@ import { ProposalSheetComponent } from './proposal-sheet.component';
 /** How often the board looks for new freights. Same-day freights only take proposals for 5 minutes. */
 const BOARD_POLL_MS = 15_000;
 
+function approxPins(freight: OpenFreight): MapPin[] {
+  return [...freight.stops]
+    .sort((a, b) => a.sequence - b.sequence)
+    .filter((stop) => stop.approxLatitude !== null && stop.approxLongitude !== null)
+    .map((stop) => ({
+      latitude: stop.approxLatitude as number,
+      longitude: stop.approxLongitude as number,
+      sequence: stop.sequence,
+      type: stop.type,
+      label: `${stop.district}, ${stop.city}`,
+    }));
+}
+
 interface BoardItem {
   readonly freight: OpenFreight;
   readonly stops: readonly StopView[];
+  readonly distance: string | null;
+  readonly duration: string | null;
+  /** Rounded places of the stops that have them. Never a street. */
+  readonly pins: readonly MapPin[];
   readonly eligibleVehicles: readonly Vehicle[];
   /** The driver's pending proposal on this freight, if any. */
   readonly pendingProposal: Proposal | null;
@@ -53,6 +72,7 @@ interface BoardItem {
     CountdownComponent,
     EmptyStateComponent,
     HeroComponent,
+    MapViewComponent,
     ProblemAlertComponent,
     StopsRouteComponent,
     UtcPipe,
@@ -107,7 +127,37 @@ interface BoardItem {
                   · propostas por <app-countdown [until]="item.freight.proposalDeadline" />
                 </p>
 
+                <div class="route-line">
+                  <ion-icon name="navigate-outline" aria-hidden="true" />
+                  @if (item.distance; as distance) {
+                    <strong>{{ distance }}</strong>
+                    @if (item.duration; as time) {
+                      <span>· cerca de {{ time }}</span>
+                    }
+                  } @else {
+                    <span class="muted">Distância ainda não calculada</span>
+                  }
+                </div>
+
                 <app-stops-route [stops]="item.stops" />
+
+                @if (item.pins.length > 0) {
+                  <button class="link-btn" type="button" [attr.aria-expanded]="isOpen(item.freight.id)" (click)="toggleMap(item.freight.id)">
+                    <ion-icon name="map-outline" aria-hidden="true" />
+                    {{ isOpen(item.freight.id) ? 'Esconder mapa' : 'Ver região no mapa' }}
+                  </button>
+                  @if (isOpen(item.freight.id)) {
+                    <app-map-view
+                      [pins]="item.pins"
+                      [approximate]="true"
+                      ariaLabel="Mapa aproximado das paradas do frete"
+                    />
+                    <p class="field-hint">
+                      Os círculos mostram a região (cerca de 1 km), não o endereço. A rua completa aparece só depois que
+                      você ganha o frete.
+                    </p>
+                  }
+                }
 
                 @if (item.pendingProposal; as proposal) {
                   <div class="notice row row--between">
@@ -148,6 +198,21 @@ export class FreightBoardPage {
   private readonly freights = signal<OpenFreight[] | null>(null);
   private readonly vehicles = signal<Vehicle[] | null>(null);
   private readonly proposals = signal<Proposal[]>([]);
+  private readonly openMaps = signal<ReadonlySet<string>>(new Set());
+
+  protected isOpen(id: string): boolean {
+    return this.openMaps().has(id);
+  }
+
+  protected toggleMap(id: string): void {
+    this.openMaps.update((current) => {
+      const next = new Set(current);
+      if (!next.delete(id)) {
+        next.add(id);
+      }
+      return next;
+    });
+  }
 
   protected readonly vehiclesLoaded = computed(() => this.vehicles() !== null);
   protected readonly vehicleCount = computed(() => this.vehicles()?.length ?? 0);
@@ -168,6 +233,9 @@ export class FreightBoardPage {
       .map((freight) => ({
         freight,
         stops: fromOpenStops(freight.stops),
+        distance: formatDistance(freight.routeDistanceMeters),
+        duration: formatDuration(freight.routeDurationSeconds),
+        pins: approxPins(freight),
         eligibleVehicles: vehicles.filter(
           (vehicle) =>
             vehicle.isActive &&

@@ -1,11 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { IonContent, IonFooter, IonIcon, IonInput, IonSpinner } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { AddressesService } from '../../core/api/addresses.service';
 import { FreightsService } from '../../core/api/freights.service';
-import { Address, VEHICLE_TYPES, VehicleType } from '../../core/models';
+import { ApiError } from '../../core/http/api-error';
+import { Address, RouteMap, VEHICLE_TYPES, VehicleType } from '../../core/models';
 import { VEHICLE_TYPE_LABEL } from '../../core/ui/labels';
 import { createRequestState } from '../../core/ui/request-state';
 import { ToastService } from '../../core/ui/toast.service';
@@ -14,6 +15,7 @@ import { localInputToUtcIso } from '../../core/util/dates';
 import { parseDecimal } from '../../core/util/normalizers';
 import { StopView } from '../../core/util/stop-views';
 import { PageBarComponent } from '../../shared/components/page-bar.component';
+import { RouteMapCardComponent } from '../../shared/components/route-map-card.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
 import { greaterThan, notBlank } from '../../shared/forms/validators';
 import { DraftStop, initialStops, toRequestStops, validateStops } from './freight-draft';
@@ -60,6 +62,7 @@ function localInputValue(date: Date): string {
     FreightSummaryComponent,
     PageBarComponent,
     ProblemAlertComponent,
+    RouteMapCardComponent,
     RoutePlannerComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -111,6 +114,14 @@ function localInputValue(date: Date): string {
               @case (0) {
                 <app-problem-alert [error]="addressesRequest.error()" />
                 <app-route-planner [addresses]="addresses()" [(stops)]="stops" (addressSaved)="onAddressSaved($event)" />
+                @if (chosen().length >= 2) {
+                  <app-route-map-card
+                    [route]="route()"
+                    [loading]="routeLoading()"
+                    [error]="routeError()"
+                    [missing]="missingPosition()"
+                  />
+                }
                 @if (tried() && stopProblems().length > 0) {
                   <div class="notice notice--error" role="alert">
                     <ul>
@@ -215,6 +226,15 @@ function localInputValue(date: Date): string {
               @case (3) {
                 <app-freight-summary [summary]="summary()" [editable]="true" (edit)="go($event)" />
 
+                @if (chosen().length >= 2) {
+                  <app-route-map-card
+                    [route]="route()"
+                    [loading]="routeLoading()"
+                    [error]="routeError()"
+                    [missing]="missingPosition()"
+                  />
+                }
+
                 <app-problem-alert [error]="publishRequest.error()">
                   @if (publishRequest.error()?.code === 'freight.terms_not_accepted') {
                     <p><a class="link-btn" routerLink="/terms">Ler e aceitar os termos</a></p>
@@ -308,6 +328,29 @@ export class NewFreightPage {
 
   private readonly formTick = signal(0);
 
+  /** The chosen addresses in the order of the run, once the stops are valid (every one picked, none repeated). */
+  protected readonly chosen = computed<Address[]>(() => {
+    if (this.stopProblems().length > 0) {
+      return [];
+    }
+    const byId = new Map(this.addresses().map((address) => [address.id, address] as const));
+    return this.stops()
+      .map((stop) => byId.get(stop.addressId))
+      .filter((address): address is Address => address !== undefined);
+  });
+  protected readonly missingPosition = computed(() =>
+    this.chosen()
+      .filter((address) => address.latitude === null || address.longitude === null)
+      .map((address) => address.label),
+  );
+
+  // Route preview (distance, time, map). Asked as soon as the addresses are chosen and ordered, before publishing.
+  protected readonly route = signal<RouteMap | null>(null);
+  protected readonly routeLoading = signal(false);
+  protected readonly routeError = signal<ApiError | null>(null);
+  private previewTimer: ReturnType<typeof setTimeout> | null = null;
+  private previewToken = 0;
+
   protected readonly summary = computed<FreightSummary>(() => {
     this.formTick();
     const cargo = this.cargoForm.getRawValue();
@@ -342,6 +385,47 @@ export class NewFreightPage {
   constructor() {
     // The summary reads the reactive form, which is not a signal: nudge it when the form changes.
     this.cargoForm.valueChanges.subscribe(() => this.formTick.update((n) => n + 1));
+
+    effect(() => {
+      const ids = this.chosen().map((address) => address.id);
+      const missing = this.missingPosition().length > 0;
+      untracked(() => this.schedulePreview(ids, missing));
+    });
+  }
+
+  private schedulePreview(addressIds: readonly string[], hasMissingPosition: boolean): void {
+    if (this.previewTimer !== null) {
+      clearTimeout(this.previewTimer);
+      this.previewTimer = null;
+    }
+    this.previewToken += 1;
+    const token = this.previewToken;
+    this.routeError.set(null);
+
+    // Without a position on every address the API would answer 400; say so locally and skip the call.
+    if (addressIds.length < 2 || hasMissingPosition) {
+      this.route.set(null);
+      this.routeLoading.set(false);
+      return;
+    }
+    this.routeLoading.set(true);
+    this.previewTimer = setTimeout(async () => {
+      try {
+        const route = await firstValueFrom(this.freights.routePreview(addressIds));
+        if (token === this.previewToken) {
+          this.route.set(route);
+        }
+      } catch (caught) {
+        if (token === this.previewToken) {
+          this.route.set(null);
+          this.routeError.set(ApiError.from(caught));
+        }
+      } finally {
+        if (token === this.previewToken) {
+          this.routeLoading.set(false);
+        }
+      }
+    }, 350);
   }
 
   ionViewWillEnter(): void {

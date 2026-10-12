@@ -184,6 +184,8 @@ const CANCELLABLE: readonly DeliveryStatus[] = ['Scheduled', 'ToPickup', 'Incide
                     <h3 id="pay-title">Pagamento</h3>
                     @if (paymentDone()) {
                       <p class="notice"><ion-icon name="checkmark-circle-outline" aria-hidden="true" /> Você confirmou o recebimento deste frete.</p>
+                    } @else if (paidInApp()) {
+                      <p class="notice"><ion-icon name="checkmark-circle-outline" aria-hidden="true" /> Pagamento confirmado. Você não precisa fazer nada.</p>
                     } @else {
                       <p class="small">
                         O cliente paga direto a você, fora do app. A plataforma não toca no dinheiro: confirme aqui só depois de receber.
@@ -367,6 +369,8 @@ export class DeliveryRoutePage {
   protected readonly paymentMethod = signal<PaymentMethod>('Pix');
   protected readonly paymentReference = signal('');
   protected readonly paymentDone = signal(false);
+  /** The API already has this freight's payment as paid (paid in the app, or confirmed earlier). */
+  protected readonly paidInApp = signal(false);
 
   private readonly progress = signal<DeliveryProgress | null>(null);
 
@@ -620,6 +624,7 @@ export class DeliveryRoutePage {
     const summary = deliveries.find((d) => d.deliveryId === this.deliveryId);
     if (summary) {
       this.status.set(summary.status);
+      this.paidInApp.set(summary.payment === 'Paid');
     }
     this.progress.set(null);
     void this.loadMap();

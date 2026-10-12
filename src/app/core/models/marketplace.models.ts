@@ -2,6 +2,7 @@ import { Address } from './address.models';
 import {
   DeliveryStatus,
   FreightStatus,
+  PaymentStatus,
   ProposalStatus,
   RouteView,
   StopType,
@@ -134,6 +135,8 @@ export interface DriverDeliverySummary {
   scheduledPickupAt: string | null;
   totalStops: number;
   completedStops: number;
+  /** Payment of the freight, or null when none was started. Absent on API versions that predate the field. */
+  payment?: PaymentStatus | null;
   createdAt: string;
 }
 

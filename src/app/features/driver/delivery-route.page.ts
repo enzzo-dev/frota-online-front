@@ -29,6 +29,7 @@ import { DELIVERY_STATUS_VIEW, PAYMENT_METHOD_LABEL } from '../../core/ui/labels
 import { completeRefresh } from '../../core/ui/refresher';
 import { createRequestState } from '../../core/ui/request-state';
 import { ToastService } from '../../core/ui/toast.service';
+import { googleMapsNavUrl, wazeNavUrl } from '../../core/util/address-format';
 import { StopView, fromRouteStops } from '../../core/util/stop-views';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { PageBarComponent } from '../../shared/components/page-bar.component';
@@ -88,6 +89,14 @@ const CANCELLABLE: readonly DeliveryStatus[] = ['Scheduled', 'ToPickup', 'Incide
         gap: 40px;
         align-items: start;
       }
+    }
+    .nav-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .nav-row .btn {
+      flex: 1 1 140px;
     }
     .file-row {
       display: flex;
@@ -229,6 +238,15 @@ const CANCELLABLE: readonly DeliveryStatus[] = ['Scheduled', 'ToPickup', 'Incide
                   <h3 id="next-title">Próxima parada: {{ next.type === 'Pickup' ? 'coleta' : 'entrega' }}</h3>
                   <app-stops-route [stops]="nextView()" />
 
+                  <div class="nav-row" role="group" aria-label="Abrir navegação até a {{ next.type === 'Pickup' ? 'coleta' : 'entrega' }}">
+                    <a class="btn btn--sm" [href]="wazeUrl(next)" target="_blank" rel="noopener">
+                      <ion-icon name="navigate-outline" aria-hidden="true" /> Abrir no Waze
+                    </a>
+                    <a class="btn btn--ghost btn--sm" [href]="googleUrl(next)" target="_blank" rel="noopener">
+                      <ion-icon name="map-outline" aria-hidden="true" /> Abrir no Maps
+                    </a>
+                  </div>
+
                   <ion-textarea
                     label="Observação (opcional)"
                     labelPlacement="stacked"
@@ -365,6 +383,14 @@ export class DeliveryRoutePage {
   });
 
   /** The stop to do now. The API says which one (`nextStopId`); without an answer yet it is the first not done. */
+  protected wazeUrl(stop: RouteStop): string {
+    return wazeNavUrl(stop.address);
+  }
+
+  protected googleUrl(stop: RouteStop): string {
+    return googleMapsNavUrl(stop.address);
+  }
+
   protected readonly nextStop = computed<RouteStop | null>(() => {
     const stops = this.orderedStops();
     const id = this.progress()?.nextStopId;

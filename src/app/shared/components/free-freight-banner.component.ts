@@ -1,133 +1,163 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { IonIcon } from '@ionic/angular';
 import { FreeFreightService } from '../../core/api/free-freight.service';
 
 /**
- * Tells the driver where they stand with the free freight. Nothing is shown to a subscriber or while the state is
- * unknown. `compact` is a single line for screens where the full explanation would be noise.
+ * Tells the driver where they stand with the free freight, in the same slip style as the proposal sheet: a `0/1` or `1/1`
+ * counter and plain sentences. Nothing is shown to a subscriber or while the state is unknown. `compact` is one line.
  */
 @Component({
   selector: 'app-free-freight-banner',
-  imports: [IonIcon, RouterLink],
+  imports: [RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     .ff {
-      display: flex;
-      gap: 14px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: 14px;
+      row-gap: 10px;
       padding: 16px;
-      border-radius: var(--r-md);
-      background: linear-gradient(180deg, #fff, #fff7f7);
-      border: 1.5px solid #f1c5c7;
+      border: 1.5px solid var(--black);
+      border-radius: 16px;
+      background: var(--white);
     }
     .ff--used {
-      background: #fff3f3;
       border-color: var(--red);
     }
-    .ff__icon {
-      flex: none;
-      display: grid;
-      place-items: center;
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
-      color: #fff;
+    .count {
+      align-self: start;
+      font: 700 15px/1 var(--font-mono);
+      padding: 8px 9px;
+      border-radius: 8px;
+      border: 1.5px solid var(--black);
+      color: var(--black);
+    }
+    .ff--used .count {
+      border-color: var(--red);
       background: var(--red);
-      font-size: 22px;
+      color: #fff;
     }
-    .ff--used .ff__icon {
-      background: var(--red-deep);
+    .ff--used .cap {
+      color: var(--red);
     }
-    .ff__body {
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .ff__title {
+    .title {
       margin: 0;
-      font-family: var(--font-display);
-      font-weight: 700;
-      font-size: 1.05rem;
+      font: 700 1.05rem/1.25 var(--font-display);
       letter-spacing: -0.01em;
     }
-    .ff__list {
-      margin: 0;
-      padding-left: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+    .lede {
+      margin: 4px 0 0;
       font-size: 14px;
-      color: #2b2b30;
+      color: var(--ink-soft);
     }
-    .ff__list strong {
+    .terms {
+      grid-column: 1 / -1;
+      margin: 0;
+      padding: 10px 0 0;
+      border-top: 1.5px dashed var(--line);
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 6px 10px;
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
+    .terms dt {
+      font: 600 11px/1.6 var(--font-mono);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--black);
+    }
+    .terms dd {
+      margin: 0;
+    }
+    .go {
+      grid-column: 1 / -1;
+      justify-self: start;
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--black);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+    .ff--used .go {
       color: var(--red-deep);
-    }
-    .ff__cta {
-      align-self: flex-start;
     }
     .ff--compact {
       align-items: center;
       padding: 12px 14px;
     }
-    .ff--compact .ff__icon {
-      width: 36px;
-      height: 36px;
-      font-size: 18px;
-      border-radius: 12px;
+    .ff--compact .count {
+      align-self: center;
+      font-size: 13px;
+      padding: 6px 7px;
     }
     .ff--compact p {
       margin: 0;
+      font-size: 14px;
+    }
+    .ff--compact .go {
+      grid-column: auto;
       font-size: 14px;
     }
   `,
   template: `
     @switch (state()) {
       @case ('available') {
-        <section class="ff" [class.ff--compact]="compact()" aria-label="Frete grátis">
-          <span class="ff__icon"><ion-icon name="gift-outline" aria-hidden="true" /></span>
-          <div class="ff__body">
-            @if (compact()) {
-              <p><strong>Você tem 1 frete grátis.</strong> Depois dele, só com assinatura.</p>
-            } @else {
-              <h2 class="ff__title">Você tem 1 frete grátis</h2>
-              <ul class="ff__list">
-                <li>Sem assinatura, você pode pegar <strong>um único frete</strong>. Depois dele, só envia propostas com um plano.</li>
-                <li>
-                  Pode enviar várias propostas agora, mas <strong>só a primeira que o cliente aprovar</strong> leva o frete grátis.
-                  As outras serão recusadas.
-                </li>
-                <li>Se esse frete for cancelado, o frete grátis volta.</li>
-              </ul>
-              @if (!hideAction()) {
-                <a class="btn btn--ghost btn--sm ff__cta" routerLink="/driver/billing">Ver planos</a>
-              }
+        @if (compact()) {
+          <section class="ff ff--compact" aria-label="Frete grátis">
+            <span class="count">0/1</span>
+            <p><strong>Frete grátis disponível.</strong> Depois dele, propostas só com assinatura.</p>
+          </section>
+        } @else {
+          <section class="ff" aria-label="Frete grátis">
+            <span class="count">0/1</span>
+            <div>
+              <span class="cap">Sem plano</span>
+              <p class="title">Seu primeiro frete é grátis</p>
+              <p class="lede">Depois dele, você só envia propostas com assinatura.</p>
+            </div>
+            <dl class="terms">
+              <dt>Aprovação</dt>
+              <dd>Pode propor em vários fretes, mas só o primeiro que o cliente aprovar usa o grátis. Os outros são recusados.</dd>
+              <dt>Cancelou</dt>
+              <dd>Se esse frete for cancelado, o grátis volta.</dd>
+            </dl>
+            @if (!hideAction()) {
+              <a class="go" routerLink="/driver/billing">Ver planos</a>
             }
-          </div>
-        </section>
+          </section>
+        }
       }
       @case ('used') {
-        <section class="ff ff--used" [class.ff--compact]="compact()" role="alert" aria-label="Frete grátis usado">
-          <span class="ff__icon"><ion-icon name="warning-outline" aria-hidden="true" /></span>
-          <div class="ff__body">
-            @if (compact()) {
-              <p>
-                <strong>Seu frete grátis já foi usado.</strong> Para propor de novo, assine um plano.
-                <a class="link-btn" routerLink="/driver/billing">Ver planos</a>
-              </p>
-            } @else {
-              <h2 class="ff__title">Seu frete grátis já foi usado</h2>
-              <ul class="ff__list">
-                <li><strong>Sem assinatura, você não consegue enviar novas propostas.</strong></li>
-                <li>Propostas que você já enviou só podem ser aprovadas pelo cliente se você assinar antes.</li>
-                <li>Se o frete grátis for cancelado, você volta a ter direito a ele.</li>
-              </ul>
+        @if (compact()) {
+          <section class="ff ff--used ff--compact" role="alert" aria-label="Frete grátis usado">
+            <span class="count">1/1</span>
+            <p>
+              <strong>Frete grátis usado.</strong> Assine para propor de novo.
               @if (!hideAction()) {
-                <a class="btn btn--sm ff__cta" routerLink="/driver/billing">Assinar um plano</a>
+                <a class="go" routerLink="/driver/billing">Ver planos</a>
               }
+            </p>
+          </section>
+        } @else {
+          <section class="ff ff--used" role="alert" aria-label="Frete grátis usado">
+            <span class="count">1/1</span>
+            <div>
+              <span class="cap">Sem plano</span>
+              <p class="title">Seu frete grátis já foi usado</p>
+              <p class="lede">Para enviar novas propostas, assine um plano.</p>
+            </div>
+            <dl class="terms">
+              <dt>Abertas</dt>
+              <dd>Propostas que você já enviou só podem ser aprovadas se você assinar antes.</dd>
+              <dt>Cancelou</dt>
+              <dd>Se o frete grátis for cancelado, você volta a ter direito a ele.</dd>
+            </dl>
+            @if (!hideAction()) {
+              <a class="go" routerLink="/driver/billing">Assinar um plano</a>
             }
-          </div>
-        </section>
+          </section>
+        }
       }
     }
   `,
@@ -135,7 +165,7 @@ import { FreeFreightService } from '../../core/api/free-freight.service';
 export class FreeFreightBannerComponent {
   private readonly freeFreight = inject(FreeFreightService);
   readonly compact = input(false);
-  /** Hide the button that goes to the plans (for the plans screen itself). */
+  /** Hide the link to the plans (for the plans screen itself). */
   readonly hideAction = input(false);
   protected readonly state = this.freeFreight.state;
 }

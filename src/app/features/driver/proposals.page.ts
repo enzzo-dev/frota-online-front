@@ -51,6 +51,27 @@ const POLL_MS = 20_000;
     UtcPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    .stake {
+      margin: 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1.5px solid var(--red);
+      border-radius: 16px;
+      font-size: 14px;
+      color: var(--red-deep);
+    }
+    .stake__count {
+      flex: none;
+      font: 700 13px/1 var(--font-mono);
+      padding: 6px 7px;
+      border-radius: 8px;
+      background: var(--red);
+      color: #fff;
+    }
+  `,
   template: `
     <ion-content [fullscreen]="true">
       <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
@@ -65,10 +86,13 @@ const POLL_MS = 20_000;
 
         <app-free-freight-banner [compact]="true" />
         @if (freeAtStake()) {
-          <div class="notice notice--error small" role="alert">
-            Você tem <strong>{{ pendingCount() }} propostas abertas</strong> e só um frete grátis. O cliente que aprovar
-            <strong>primeiro</strong> leva o frete grátis; as outras aprovações serão recusadas, a menos que você assine um plano.
-          </div>
+          <p class="stake" role="alert">
+            <span class="stake__count">{{ pendingCount() }}→1</span>
+            <span>
+              {{ pendingCount() }} propostas abertas disputam um só frete grátis. Vale a primeira que o cliente aprovar; as
+              outras aprovações serão recusadas se você não assinar.
+            </span>
+          </p>
         }
 
         <ion-segment [value]="filter()" (ionChange)="onFilter($event.detail.value)">

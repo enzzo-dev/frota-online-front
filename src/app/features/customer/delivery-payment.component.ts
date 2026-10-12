@@ -12,6 +12,7 @@ import { createRequestState } from '../../core/ui/request-state';
 import { ToastService } from '../../core/ui/toast.service';
 import { CARD_BRAND_LABEL, CardBrand, detectBrand, luhn, maskCardNumber, maskExpiry, parseExpiry } from '../../core/util/card';
 import { maskPhone, maskTaxId, maskZip } from '../../core/util/masks';
+import { PLATFORM_FEE } from '../../core/util/fees';
 import { normalizePhone, normalizeTaxId, normalizeZip } from '../../core/util/normalizers';
 import { CreditCardComponent } from '../../shared/components/credit-card.component';
 import { PixCardComponent } from '../../shared/components/pix-card.component';
@@ -20,6 +21,7 @@ import { ProblemAlertComponent } from '../../shared/components/problem-alert.com
 type Method = 'pix' | 'card' | 'wallet';
 
 const NEW_CARD = 'new';
+
 
 /**
  * How a customer pays a delivered freight in the app: Pix, credit card (new or saved) or Apple Pay.
@@ -35,85 +37,115 @@ const NEW_CARD = 'new';
       display: block;
     }
     .pay {
-      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 18px 16px;
+      border: 1.5px solid var(--black);
+      border-radius: 18px;
+      background: var(--white);
     }
     .pay__head {
       display: flex;
-      align-items: flex-end;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 12px;
     }
     .pay__amount {
-      font-family: var(--font-display);
-      font-weight: 700;
-      font-size: 2rem;
+      font: 700 2.4rem/1.05 var(--font-display);
       letter-spacing: -0.03em;
-      line-height: 1;
-      margin: 0;
+      margin: 4px 0 0;
     }
+    .tag {
+      flex: none;
+      font: 600 11px/1 var(--font-mono);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 6px 8px;
+      border-radius: 6px;
+      background: var(--black);
+      color: #fff;
+    }
+    .split {
+      margin: 0;
+      padding-top: 12px;
+      border-top: 1.5px dashed var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 14px;
+    }
+    .split div {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .split dt {
+      color: var(--ink-soft);
+    }
+    .split dd {
+      margin: 0;
+      font: 13px var(--font-mono);
+    }
+
+    /* method switch */
     .methods {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
+      padding: 4px;
+      gap: 4px;
+      border-radius: 14px;
+      background: var(--panel);
     }
     .method {
-      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
-      padding: 14px 6px 12px;
+      gap: 3px;
+      padding: 10px 4px;
       font: inherit;
       color: var(--black);
-      background: var(--white);
-      border: 1.5px solid var(--line);
-      border-radius: var(--r-sm);
+      background: transparent;
+      border: 0;
+      border-radius: 10px;
       cursor: pointer;
       transition:
-        border-color 0.2s,
         background 0.2s,
-        transform 0.15s,
-        box-shadow 0.2s;
+        color 0.2s;
       -webkit-tap-highlight-color: transparent;
-    }
-    .method ion-icon {
-      font-size: 24px;
-      transition: color 0.2s, transform 0.25s;
     }
     .method__name {
       font-weight: 700;
-      font-size: 13px;
+      font-size: 14px;
     }
     .method__sub {
-      font-size: 11px;
+      font: 500 10px/1.2 var(--font-mono);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
       color: var(--ink-mute);
-      text-align: center;
-      line-height: 1.2;
-    }
-    .method:hover:not(:disabled) {
-      border-color: var(--field-line);
-      transform: translateY(-1px);
     }
     .method--on {
-      border-color: var(--red);
-      background: linear-gradient(180deg, #fff, #fff4f4);
-      box-shadow: 0 8px 20px -14px rgba(215, 20, 26, 0.8);
+      background: var(--black);
+      color: #fff;
     }
-    .method--on ion-icon {
-      color: var(--red);
-      transform: scale(1.12);
+    .method--on .method__sub {
+      color: rgba(255, 255, 255, 0.6);
     }
     .method:disabled {
-      opacity: 0.55;
+      opacity: 0.45;
       cursor: not-allowed;
     }
+    .method:focus-visible {
+      outline: 2px solid var(--red);
+      outline-offset: 2px;
+    }
     .pane {
-      animation: rise 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+      animation: rise 0.3s ease-out;
     }
     @keyframes rise {
       from {
         opacity: 0;
-        transform: translateY(8px);
+        transform: translateY(6px);
       }
     }
     .grid2 {
@@ -122,13 +154,16 @@ const NEW_CARD = 'new';
       gap: 12px;
     }
     .sub {
-      font-size: 12px;
-      font-weight: 700;
+      margin: 6px 0 0;
+      padding-top: 12px;
+      border-top: 1.5px dashed var(--line);
+      font: 600 11px/1.2 var(--font-mono);
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: var(--ink-soft);
-      margin: 4px 0 0;
+      color: var(--ink-mute);
     }
+
+    /* saved cards */
     .saved {
       display: flex;
       flex-direction: column;
@@ -145,50 +180,40 @@ const NEW_CARD = 'new';
       color: var(--black);
       background: var(--white);
       border: 1.5px solid var(--line);
-      border-radius: var(--r-sm);
+      border-radius: 14px;
       cursor: pointer;
-      transition:
-        border-color 0.2s,
-        background 0.2s;
+      transition: border-color 0.15s;
     }
     .saved__item--on {
-      border-color: var(--red);
-      background: #fff4f4;
+      border-color: var(--black);
+      box-shadow: inset 0 0 0 1px var(--black);
     }
     .saved__radio {
       flex: none;
-      width: 20px;
-      height: 20px;
+      width: 18px;
+      height: 18px;
       border-radius: 50%;
-      border: 2px solid var(--field-line);
+      border: 1.5px solid var(--field-line);
       display: grid;
       place-items: center;
-      transition: border-color 0.2s;
     }
     .saved__item--on .saved__radio {
-      border-color: var(--red);
+      border-color: var(--black);
     }
     .saved__item--on .saved__radio::after {
       content: '';
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      background: var(--red);
-      animation: pop 0.25s ease-out;
-    }
-    @keyframes pop {
-      from {
-        transform: scale(0);
-      }
+      background: var(--black);
     }
     .saved__badge {
       flex: none;
-      min-width: 46px;
-      padding: 4px 8px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 11px;
-      letter-spacing: 0.04em;
+      min-width: 52px;
+      padding: 5px 7px;
+      border-radius: 6px;
+      font: 700 10px/1 var(--font-mono);
+      letter-spacing: 0.06em;
       text-transform: uppercase;
       text-align: center;
       color: #fff;
@@ -197,71 +222,79 @@ const NEW_CARD = 'new';
     .saved__num {
       flex: 1;
       min-width: 0;
-      font-family: var(--font-mono);
-      font-weight: 600;
-      font-size: 14px;
+      font: 600 14px var(--font-mono);
     }
     .saved__rm {
       flex: none;
-      display: grid;
-      place-items: center;
-      width: 34px;
-      height: 34px;
       border: 0;
-      border-radius: 50%;
-      background: transparent;
+      background: none;
+      padding: 8px 2px;
+      font: 600 13px var(--font-body);
       color: var(--ink-mute);
+      text-decoration: underline;
+      text-underline-offset: 3px;
       cursor: pointer;
     }
     .saved__rm:hover {
       color: var(--red);
-      background: #fdeaea;
     }
     .secure {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
+      margin: 0;
       font-size: 12px;
       color: var(--ink-soft);
-      margin: 0;
+      text-align: center;
     }
+
+    /* result */
     .state {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 4px 6px;
-      text-align: center;
+      gap: 6px;
+      padding: 14px;
+      border-radius: 14px;
+      background: var(--panel);
     }
-    .state__ring {
-      position: relative;
-      width: 64px;
-      height: 64px;
-      display: grid;
-      place-items: center;
+    .state__title {
+      margin: 0;
+      font: 700 1.15rem/1.2 var(--font-display);
+      letter-spacing: -0.01em;
     }
-    .state__ring::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 3px solid #f7d3d4;
-      border-top-color: var(--red);
-      animation: spin 1s linear infinite;
+    .state__line {
+      margin: 0;
+      font-size: 14px;
+      color: var(--ink-soft);
     }
-    .state__ring ion-icon {
-      font-size: 26px;
-      color: var(--red);
+    .state__bar {
+      height: 4px;
+      margin: 6px 0 2px;
+      border-radius: 4px;
+      background: repeating-linear-gradient(90deg, var(--red) 0 14px, transparent 14px 22px);
+      background-size: 44px 4px;
+      animation: run 0.9s linear infinite;
     }
-    @keyframes spin {
+    @keyframes run {
       to {
-        transform: rotate(360deg);
+        background-position: 44px 0;
       }
     }
-    .state--ok .state__ring::before {
-      border-color: var(--red);
-      animation: none;
+    .state--ok {
+      background: var(--black);
+      color: #fff;
+    }
+    .state--ok .cap,
+    .state--ok .state__line {
+      color: rgba(255, 255, 255, 0.65);
+    }
+    .state--bad {
+      background: #fff3f3;
+      color: var(--red-deep);
+    }
+    .state--bad .cap {
+      color: var(--red);
+    }
+    .state .btn {
+      align-self: flex-start;
+      margin-top: 6px;
     }
     .apple {
       display: flex;
@@ -285,32 +318,44 @@ const NEW_CARD = 'new';
       opacity: 0.4;
       cursor: not-allowed;
     }
+    .foot {
+      margin: 0;
+      font-size: 13px;
+      color: var(--ink-soft);
+    }
     @media (prefers-reduced-motion: reduce) {
       .pane,
-      .state__ring::before,
-      .saved__item--on .saved__radio::after {
+      .state__bar {
         animation: none;
       }
     }
   `,
   template: `
-    <section class="pay card stack" aria-label="Pagar a entrega">
+    <section class="pay" aria-label="Pagar a entrega">
       <div class="pay__head">
         <div>
-          <p class="muted small">Total a pagar</p>
+          <span class="cap">Total a pagar</span>
           <p class="pay__amount">{{ amount() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</p>
         </div>
-        <span class="chip chip--outline">Entrega concluída</span>
+        <span class="tag">Entregue</span>
       </div>
+      <dl class="split">
+        <div>
+          <dt>Vai para o motorista</dt>
+          <dd>{{ driverShare() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+        </div>
+        <div>
+          <dt>Taxa da plataforma</dt>
+          <dd>{{ fee | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+        </div>
+      </dl>
 
       <div class="methods" role="group" aria-label="Forma de pagamento">
         <button type="button" class="method" [class.method--on]="method() === 'pix'" [attr.aria-pressed]="method() === 'pix'" (click)="choose('pix')">
-          <ion-icon name="qr-code-outline" aria-hidden="true" />
           <span class="method__name">Pix</span>
           <span class="method__sub">na hora</span>
         </button>
         <button type="button" class="method" [class.method--on]="method() === 'card'" [attr.aria-pressed]="method() === 'card'" (click)="choose('card')">
-          <ion-icon name="card-outline" aria-hidden="true" />
           <span class="method__name">Cartão</span>
           <span class="method__sub">crédito</span>
         </button>
@@ -322,9 +367,8 @@ const NEW_CARD = 'new';
           [disabled]="!walletAvailable"
           (click)="choose('wallet')"
         >
-          <ion-icon name="logo-apple" aria-hidden="true" />
           <span class="method__name">Apple Pay</span>
-          <span class="method__sub">{{ walletAvailable ? 'um toque' : 'só no app iOS' }}</span>
+          <span class="method__sub">{{ walletAvailable ? 'um toque' : 'só no iPhone' }}</span>
         </button>
       </div>
 
@@ -363,27 +407,26 @@ const NEW_CARD = 'new';
           <div class="pane stack">
             @if (cardResult(); as r) {
               @if (r.status === 'Failed') {
-                <div class="state">
-                  <div class="state__ring"><ion-icon name="alert-circle-outline" aria-hidden="true" /></div>
-                  <p class="strong">Pagamento recusado</p>
-                  <p class="small muted">O cartão não foi cobrado. Tente outro cartão.</p>
-                  <button class="btn btn--ghost" type="button" (click)="retryCard()">Tentar de novo</button>
+                <div class="state state--bad" role="alert">
+                  <span class="cap">Recusado</span>
+                  <p class="state__title">O banco recusou o cartão</p>
+                  <p class="state__line">Nada foi cobrado. Tente outro cartão ou pague por Pix.</p>
+                  <button class="btn btn--ghost btn--sm" type="button" (click)="retryCard()">Tentar de novo</button>
                 </div>
               } @else {
                 <div class="state" [class.state--ok]="r.status === 'Paid'" role="status">
-                  <div class="state__ring">
-                    <ion-icon [name]="r.status === 'Paid' ? 'checkmark-circle' : 'card-outline'" aria-hidden="true" />
-                  </div>
-                  <p class="strong">{{ r.status === 'Paid' ? 'Pagamento aprovado' : 'Confirmando seu pagamento' }}</p>
-                  <p class="small muted">
-                    {{ brandName(r.brand) }} final {{ r.last4 }} · {{ r.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                  <span class="cap">{{ r.status === 'Paid' ? 'Pago' : 'Aguardando o banco' }}</span>
+                  <p class="state__title">
+                    {{ brandName(r.brand) }} •••• {{ r.last4 }} · {{ r.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
                   </p>
-                  <p class="small muted">{{ split(r.driverReceives, r.platformFee) }}</p>
                   @if (r.status !== 'Paid') {
-                    <p class="field-hint">Esta tela atualiza sozinha assim que o banco responder.</p>
+                    <div class="state__bar" aria-hidden="true"></div>
+                    <p class="state__line">A tela atualiza sozinha quando o banco confirmar. Pode sair, o pagamento continua.</p>
+                  } @else {
+                    <p class="state__line">Pagamento aprovado. O motorista já recebeu a parte dele.</p>
                   }
                   @if (r.cardSaved) {
-                    <p class="field-hint">Cartão guardado para as próximas entregas.</p>
+                    <p class="state__line">Cartão guardado para as próximas entregas.</p>
                   }
                 </div>
               }
@@ -405,7 +448,7 @@ const NEW_CARD = 'new';
                         <span class="saved__num">•••• {{ card.last4 }}</span>
                       </button>
                       <button type="button" class="saved__rm" [attr.aria-label]="'Remover cartão final ' + card.last4" (click)="removeCard(card)">
-                        <ion-icon name="trash-outline" aria-hidden="true" />
+                        Remover
                       </button>
                     </div>
                   }
@@ -498,13 +541,10 @@ const NEW_CARD = 'new';
               <button class="btn btn--block" type="button" [disabled]="request.loading() || !cardReady()" (click)="payCard()">
                 @if (request.loading()) {
                   <ion-spinner name="crescent" />
-                } @else {
-                  <ion-icon name="lock-closed-outline" aria-hidden="true" />
                 }
                 Pagar {{ amount() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
               </button>
               <p class="secure">
-                <ion-icon name="lock-closed-outline" aria-hidden="true" />
                 Os dados do cartão seguem direto ao serviço de pagamento e não ficam guardados.
               </p>
             }
@@ -515,11 +555,12 @@ const NEW_CARD = 'new';
           <div class="pane stack">
             @if (walletResult(); as r) {
               <div class="state" [class.state--ok]="r.status === 'Paid'" role="status">
-                <div class="state__ring">
-                  <ion-icon [name]="r.status === 'Paid' ? 'checkmark-circle' : 'logo-apple'" aria-hidden="true" />
-                </div>
-                <p class="strong">{{ r.status === 'Paid' ? 'Pagamento aprovado' : 'Confirmando seu pagamento' }}</p>
-                <p class="small muted">{{ split(r.driverReceives, r.platformFee) }}</p>
+                <span class="cap">{{ r.status === 'Paid' ? 'Pago com Apple Pay' : 'Aguardando o Mercado Pago' }}</span>
+                <p class="state__title">{{ r.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</p>
+                @if (r.status !== 'Paid') {
+                  <div class="state__bar" aria-hidden="true"></div>
+                }
+                <p class="state__line">{{ split(r.driverReceives, r.platformFee) }}</p>
               </div>
             } @else {
               <p class="small">
@@ -539,7 +580,7 @@ const NEW_CARD = 'new';
         }
       }
 
-      <p class="field-hint">Prefere pagar direto ao motorista? Faça isso e aguarde ele confirmar o recebimento.</p>
+      <p class="foot">Prefere pagar direto ao motorista? Pague e aguarde ele confirmar o recebimento.</p>
     </section>
   `,
 })
@@ -558,6 +599,8 @@ export class DeliveryPaymentComponent {
   readonly awaiting = output<boolean>();
 
   protected readonly newCard = NEW_CARD;
+  protected readonly fee = PLATFORM_FEE;
+  protected readonly driverShare = computed(() => Math.max(0, this.amount() - PLATFORM_FEE));
   protected readonly walletAvailable = this.wallet.isAvailable();
   protected readonly request = createRequestState();
 

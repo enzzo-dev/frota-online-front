@@ -1,7 +1,7 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { IonContent, IonIcon, IonInput, IonRefresher, IonRefresherContent, IonSpinner } from '@ionic/angular';
+import { IonContent, IonInput, IonRefresher, IonRefresherContent, IonSpinner } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { DriverBillingService } from '../../core/api/driver-billing.service';
 import { DriverWalletService } from '../../core/api/driver-wallet.service';
@@ -28,7 +28,6 @@ const WALLET_ID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-
     DatePipe,
     FormsModule,
     IonContent,
-    IonIcon,
     IonInput,
     IonRefresher,
     IonRefresherContent,
@@ -57,69 +56,100 @@ const WALLET_ID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-
       letter-spacing: -0.03em;
       margin: 0;
     }
-    .mp {
-      position: relative;
-      overflow: hidden;
+    .box {
+      border: 1.5px solid var(--black);
+      border-radius: 16px;
+      padding: 16px;
+      background: var(--white);
     }
-    .mp__top {
+    .plan {
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .plan .btn {
+      margin-top: 8px;
+    }
+    .plan--top {
+      background: var(--black);
+      color: #fff;
+    }
+    .plan--top .cap,
+    .plan--top .plan__spec,
+    .plan--top .plan__price small {
+      color: rgba(255, 255, 255, 0.6);
+    }
+    .plan__spec {
+      margin: 0;
+      font: 600 12px/1.4 var(--font-mono);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .mp {
+      border: 1.5px solid var(--black);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
       gap: 14px;
     }
-    .mp__icon {
-      flex: none;
-      display: grid;
-      place-items: center;
-      width: 48px;
-      height: 48px;
-      border-radius: 14px;
-      background: #000;
-      color: #fff;
-      font-size: 24px;
-    }
-    .mp__status {
-      display: inline-flex;
+    .mp__head {
+      display: flex;
       align-items: center;
-      gap: 6px;
-      font-weight: 700;
-      font-size: 13px;
+      justify-content: space-between;
+      gap: 10px;
     }
-    .mp__dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 50%;
-      background: var(--field-line);
+    .mp__title {
+      margin: 4px 0 0;
+      font: 700 1.1rem/1.2 var(--font-display);
+      letter-spacing: -0.01em;
     }
-    .mp__dot--on {
-      background: #16a34a;
-      box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.5);
-      animation: ping 1.8s ease-out infinite;
+    .mp__state {
+      flex: none;
+      font: 700 11px/1 var(--font-mono);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1.5px solid var(--field-line);
+      color: var(--ink-soft);
     }
-    .mp__dot--wait {
-      background: var(--red);
-      animation: blink 1s ease-in-out infinite;
+    .mp__state--on {
+      border-color: var(--black);
+      background: var(--black);
+      color: #fff;
     }
-    @keyframes ping {
-      to {
-        box-shadow: 0 0 0 9px rgba(22, 163, 74, 0);
-      }
+    .mp__state--wait {
+      border-color: var(--red);
+      color: var(--red);
+      animation: blink 1.2s ease-in-out infinite;
     }
     @keyframes blink {
       50% {
-        opacity: 0.25;
+        opacity: 0.4;
       }
     }
     .steps {
       margin: 0;
-      padding-left: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
+      padding: 12px 0 0;
+      list-style: none;
+      border-top: 1.5px dashed var(--line);
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 8px 12px;
       font-size: 14px;
       color: var(--ink-soft);
     }
+    .steps li {
+      display: contents;
+    }
+    .steps b {
+      font: 700 12px/1.5 var(--font-mono);
+      color: var(--black);
+    }
     @media (prefers-reduced-motion: reduce) {
-      .mp__dot {
+      .mp__state--wait {
         animation: none;
       }
     }
@@ -146,13 +176,15 @@ const WALLET_ID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-
             <h2>Seu plano</h2>
 
             @if (o.current; as c) {
-              <div class="card stack" [class.card--accent]="c.hasAccess">
-                <div class="row row--between">
+              <div class="box stack">
+                <div class="mp__head">
                   <div>
-                    <p class="strong">Plano {{ planName[c.plan] }}</p>
-                    <p class="muted small">{{ c.monthlyPrice | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }} por mês</p>
+                    <span class="cap">Plano {{ planName[c.plan] }}</span>
+                    <p class="plan__price">
+                      {{ c.monthlyPrice | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}<small> /mês</small>
+                    </p>
                   </div>
-                  <span class="chip" [class.chip--red]="c.status === 'Active'" [class.chip--outline]="c.status !== 'Active'">
+                  <span class="mp__state" [class.mp__state--on]="c.status === 'Active'" [class.mp__state--wait]="c.status === 'Pending'">
                     {{ statusLabel(c) }}
                   </span>
                 </div>
@@ -176,13 +208,19 @@ const WALLET_ID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-
             @if (!o.current || o.current.status === 'Cancelled') {
               <div class="plans">
                 @for (plan of o.plans; track plan.plan) {
-                  <article class="card stack">
-                    <p class="strong">{{ planName[plan.plan] }}</p>
+                  <article class="box plan" [class.plan--top]="plan.maxVehicles === null">
+                    <span class="cap">Plano {{ planName[plan.plan] }}</span>
                     <p class="plan__price">
                       {{ plan.monthlyPrice | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}<small> /mês</small>
                     </p>
-                    <p class="small muted">{{ limitText(plan) }}</p>
-                    <button class="btn btn--block" type="button" [disabled]="action.loading()" (click)="subscribe(plan.plan)">
+                    <p class="plan__spec">{{ limitText(plan) }}</p>
+                    <button
+                      class="btn btn--block"
+                      [class.btn--ghost]="plan.maxVehicles !== null"
+                      type="button"
+                      [disabled]="action.loading()"
+                      (click)="subscribe(plan.plan)"
+                    >
                       @if (action.loading() && choosing() === plan.plan) {
                         <ion-spinner name="crescent" />
                       }
@@ -201,17 +239,20 @@ const WALLET_ID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-
 
           <section class="stack" aria-label="Conta de recebimento">
             <h2>Conta de recebimento</h2>
-            <div class="card stack">
+            <div class="box stack">
+              <div class="mp__head">
+                <div>
+                  <span class="cap">Asaas</span>
+                  <p class="mp__title">Recebe Pix e cartão</p>
+                </div>
+                @if (payout(); as p) {
+                  <span class="mp__state" [class.mp__state--on]="p.configured">{{ p.configured ? 'Vinculada' : 'Pendente' }}</span>
+                }
+              </div>
               <p class="small">
                 É a sua conta no serviço de pagamento (Asaas), para onde vai a sua parte quando o cliente paga o frete por Pix
                 ou cartão no app. Sem ela, o cliente só pode pagar direto a você.
               </p>
-              @if (payout(); as p) {
-                <p class="small">
-                  Situação:
-                  <strong>{{ p.configured ? 'vinculada' : 'ainda não vinculada' }}</strong>
-                </p>
-              }
               <ion-input
                 label="Wallet ID da sua conta Asaas"
                 labelPlacement="stacked"
@@ -235,22 +276,19 @@ const WALLET_ID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-
 
           <section class="stack" aria-label="Apple Pay e Mercado Pago">
             <h2>Apple Pay</h2>
-            <div class="card mp stack" [class.card--accent]="wallet()?.connected">
-              <div class="mp__top">
-                <span class="mp__icon"><ion-icon name="logo-apple" aria-hidden="true" /></span>
-                <div class="grow">
-                  <p class="strong">Receba por Apple Pay</p>
-                  <p class="mp__status">
-                    <span class="mp__dot" [class.mp__dot--on]="wallet()?.connected" [class.mp__dot--wait]="!wallet()?.connected && connecting()"></span>
-                    @if (wallet()?.connected) {
-                      Mercado Pago conectado
-                    } @else if (connecting()) {
-                      Aguardando você autorizar…
-                    } @else {
-                      Mercado Pago não conectado
-                    }
-                  </p>
+            <div class="mp">
+              <div class="mp__head">
+                <div>
+                  <span class="cap">Mercado Pago</span>
+                  <p class="mp__title">Receba por Apple Pay</p>
                 </div>
+                @if (wallet()?.connected) {
+                  <span class="mp__state mp__state--on">Conectado</span>
+                } @else if (connecting()) {
+                  <span class="mp__state mp__state--wait">Aguardando</span>
+                } @else {
+                  <span class="mp__state">Desligado</span>
+                }
               </div>
               @if (wallet()?.connected) {
                 <p class="small">
@@ -262,9 +300,9 @@ const WALLET_ID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-
                 </button>
               } @else {
                 <ol class="steps">
-                  <li>Toque em conectar. Abrimos o Mercado Pago no navegador.</li>
-                  <li>Entre na sua conta e autorize a plataforma a receber por você.</li>
-                  <li>Volte para cá: a conexão aparece sozinha.</li>
+                  <li><b>01</b><span>Toque em conectar. O Mercado Pago abre no navegador.</span></li>
+                  <li><b>02</b><span>Entre na sua conta e autorize a plataforma a receber por você.</span></li>
+                  <li><b>03</b><span>Volte para cá. A conexão aparece sozinha.</span></li>
                 </ol>
                 <app-problem-alert [error]="walletRequest.error()" />
                 <button class="btn btn--block" type="button" [disabled]="walletRequest.loading()" (click)="connectWallet()">
@@ -335,12 +373,12 @@ export class BillingPage {
 
   protected statusLabel(subscription: Subscription): string {
     if (subscription.status === 'Active') return 'Ativo';
-    if (subscription.status === 'Pending') return 'Aguardando pagamento';
+    if (subscription.status === 'Pending') return 'Aguardando';
     return subscription.hasAccess ? 'Cancelado, com acesso' : 'Cancelado';
   }
 
   protected limitText(plan: PlanOption): string {
-    return plan.maxVehicles === null ? 'Veículos ilimitados.' : `Até ${plan.maxVehicles} veículos ativos.`;
+    return plan.maxVehicles === null ? 'Veículos ilimitados' : `Até ${plan.maxVehicles} veículos ativos`;
   }
 
   protected async subscribe(plan: SubscriptionPlan): Promise<void> {

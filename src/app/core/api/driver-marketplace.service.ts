@@ -41,6 +41,11 @@ export class DriverMarketplaceService {
     return this.api.get<DriverDeliverySummary[]>('/driver/deliveries');
   }
 
+  /** One delivery with its current status and payment, so a screen does not have to load the whole list. */
+  delivery(deliveryId: string): Observable<DriverDeliverySummary> {
+    return this.api.get<DriverDeliverySummary>(`/driver/deliveries/${deliveryId}`);
+  }
+
   route(deliveryId: string, view: RouteView): Observable<DeliveryRoute> {
     return this.api.get<DeliveryRoute>(`/driver/deliveries/${deliveryId}/route`, { view });
   }

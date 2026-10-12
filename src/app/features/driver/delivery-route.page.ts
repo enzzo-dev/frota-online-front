@@ -616,16 +616,13 @@ export class DeliveryRoutePage {
   }
 
   private async reload(): Promise<void> {
-    const [route, deliveries] = await Promise.all([
+    const [route, summary] = await Promise.all([
       firstValueFrom(this.marketplace.route(this.deliveryId, 'Full')),
-      firstValueFrom(this.marketplace.deliveries()),
+      firstValueFrom(this.marketplace.delivery(this.deliveryId)),
     ]);
     this.route.set(route);
-    const summary = deliveries.find((d) => d.deliveryId === this.deliveryId);
-    if (summary) {
-      this.status.set(summary.status);
-      this.paidInApp.set(summary.payment === 'Paid');
-    }
+    this.status.set(summary.status);
+    this.paidInApp.set(summary.payment === 'Paid');
     this.progress.set(null);
     void this.loadMap();
   }

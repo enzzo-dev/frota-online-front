@@ -10,6 +10,14 @@ export interface GeocodeQuery {
   zipCode: string;
 }
 
+const UF_NAMES: Record<string, string> = {
+  AC: 'Acre', AL: 'Alagoas', AP: 'Amapá', AM: 'Amazonas', BA: 'Bahia', CE: 'Ceará', DF: 'Distrito Federal',
+  ES: 'Espírito Santo', GO: 'Goiás', MA: 'Maranhão', MT: 'Mato Grosso', MS: 'Mato Grosso do Sul',
+  MG: 'Minas Gerais', PA: 'Pará', PB: 'Paraíba', PR: 'Paraná', PE: 'Pernambuco', PI: 'Piauí',
+  RJ: 'Rio de Janeiro', RN: 'Rio Grande do Norte', RS: 'Rio Grande do Sul', RO: 'Rondônia', RR: 'Roraima',
+  SC: 'Santa Catarina', SP: 'São Paulo', SE: 'Sergipe', TO: 'Tocantins',
+};
+
 /**
  * Finds the position of a typed address in Nominatim (OpenStreetMap). The back-end does not geocode, the app does.
  *
@@ -30,15 +38,35 @@ export class GeocodingService {
     }
     this.lastCallAt = Date.now();
 
+    const state = UF_NAMES[query.state.toUpperCase()] ?? query.state;
+    const street = `${query.number} ${query.street}`.trim();
+    // OSM covers Brazilian postcodes poorly, so a postalcode filter or a bad district empties the result. Try the
+    // precise query first, then relax it step by step.
+    const attempts: Record<string, string>[] = [
+      { street, city: query.city, state },
+      { q: `${query.street}, ${query.number}, ${query.district}, ${query.city}, ${state}, Brasil` },
+      { q: `${query.street}, ${query.city}, ${state}, Brasil` },
+      { q: `${query.zipCode.slice(0, 5)}-${query.zipCode.slice(5)}, ${query.city}, ${state}, Brasil` },
+    ];
+    for (const [index, attempt] of attempts.entries()) {
+      if (index > 0) {
+        await new Promise((resolve) => setTimeout(resolve, 1100));
+      }
+      const point = await this.search(attempt);
+      if (point) {
+        return point;
+      }
+    }
+    return null;
+  }
+
+  private async search(fields: Record<string, string>): Promise<GeoPoint | null> {
     const params = new URLSearchParams({
       format: 'jsonv2',
       limit: '1',
       countrycodes: 'br',
       'accept-language': 'pt-BR',
-      street: `${query.number} ${query.street}`.trim(),
-      city: query.city,
-      state: query.state,
-      postalcode: query.zipCode,
+      ...fields,
     });
     const response = await fetch(`${this.endpoint}?${params.toString()}`, { headers: { Accept: 'application/json' } });
     if (!response.ok) {

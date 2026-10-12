@@ -35,6 +35,8 @@ import {
   qrCodeOutline,
   linkOutline,
   checkmarkCircle,
+  giftOutline,
+  warningOutline,
 } from 'ionicons/icons';
 
 /** Registers every icon the app uses by name, once, at start-up. */
@@ -75,5 +77,7 @@ export function registerIcons(): void {
     'qr-code-outline': qrCodeOutline,
     'link-outline': linkOutline,
     'checkmark-circle': checkmarkCircle,
+    'gift-outline': giftOutline,
+    'warning-outline': warningOutline,
   });
 }

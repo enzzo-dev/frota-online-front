@@ -78,6 +78,13 @@ npm run build      # production build in dist/
   `core/payments/wallet-token.provider.ts`); in a browser the option stays disabled ("só no app iOS").
 - Driver: **Assinatura e recebimento** also connects the Mercado Pago account (`/driver/wallet-account`): opens the
   authorization link and polls until the callback saves the connection; can disconnect.
+- Free freight (driver without a plan may take **one** freight; enforced by the API when the proposal is sent and when the customer
+  approves it; a cancelled delivery gives it back). The API does not report the state, so
+  `core/api/free-freight.service.ts` derives it: no paid period and no non-cancelled delivery -> `available`; with one -> `used`.
+  `shared/components/free-freight-banner.component.ts` explains it on the freight board, Minhas propostas (plus a warning when
+  several open proposals compete for the single free freight) and the plans screen. The proposal sheet warns before sending
+  ("este pode ser o seu frete grátis" / "seu frete grátis já foi usado") and `subscription.required` offers "Ver planos".
+  Whether the rule is on at all is the server's `Subscriptions__RequiredToPropose`; the app never blocks the button on its own.
 - The admin "settle fee" screen was left out: the Pix flow settles fees by itself.
 
 ### What the API still lacks

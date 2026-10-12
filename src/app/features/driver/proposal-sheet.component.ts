@@ -16,7 +16,10 @@ import {
   ModalController,
 } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
+import { Router } from '@angular/router';
 import { DriverMarketplaceService } from '../../core/api/driver-marketplace.service';
+import { FreeFreightService } from '../../core/api/free-freight.service';
+import { IonIcon } from '@ionic/angular';
 import { OpenFreight, Vehicle } from '../../core/models';
 import { VEHICLE_TYPE_LABEL } from '../../core/ui/labels';
 import { createRequestState } from '../../core/ui/request-state';
@@ -35,6 +38,7 @@ import { greaterThan } from '../../shared/forms/validators';
     IonButtons,
     IonContent,
     IonHeader,
+    IonIcon,
     IonInput,
     IonSelect,
     IonSelectOption,
@@ -107,7 +111,36 @@ import { greaterThan } from '../../shared/forms/validators';
           rows="2"
         />
 
-        <app-problem-alert [error]="request.error()" />
+        @switch (freeState()) {
+          @case ('available') {
+            <div class="warn warn--info" role="note">
+              <ion-icon name="gift-outline" aria-hidden="true" />
+              <div>
+                <p class="strong">Este pode ser o seu frete grátis</p>
+                <p class="small">
+                  Se o cliente aprovar, este será o seu único frete sem assinatura: para propor de novo, você precisará de um
+                  plano. Se tiver outras propostas abertas, só a primeira aprovada leva o frete grátis.
+                </p>
+              </div>
+            </div>
+          }
+          @case ('used') {
+            <div class="warn warn--stop" role="alert">
+              <ion-icon name="warning-outline" aria-hidden="true" />
+              <div>
+                <p class="strong">Seu frete grátis já foi usado</p>
+                <p class="small">Sem assinatura, esta proposta será recusada. Assine um plano para continuar propondo.</p>
+                <button class="link-btn" type="button" (click)="goToPlans()">Ver planos</button>
+              </div>
+            </div>
+          }
+        }
+
+        <app-problem-alert [error]="request.error()">
+          @if (request.error()?.code === 'subscription.required') {
+            <button class="link-btn" type="button" (click)="goToPlans()">Ver planos e assinar</button>
+          }
+        </app-problem-alert>
 
         <button class="btn btn--block" type="submit" [disabled]="request.loading()">
           @if (request.loading()) {
@@ -122,12 +155,42 @@ import { greaterThan } from '../../shared/forms/validators';
     .sheet-body {
       padding: 16px 16px calc(32px + var(--ion-safe-area-bottom, 0px));
     }
+    .warn {
+      display: flex;
+      gap: 12px;
+      padding: 14px;
+      border-radius: var(--r-md);
+      font-size: 14px;
+    }
+    .warn ion-icon {
+      flex: none;
+      font-size: 22px;
+      margin-top: 2px;
+    }
+    .warn p {
+      margin: 0 0 4px;
+    }
+    .warn--info {
+      background: #fff7f7;
+      border: 1.5px solid #f1c5c7;
+    }
+    .warn--info ion-icon {
+      color: var(--red);
+    }
+    .warn--stop {
+      background: #fff3f3;
+      border: 1.5px solid var(--red);
+      color: var(--red-deep);
+    }
   `,
 })
 export class ProposalSheetComponent implements OnInit {
   private readonly fb = inject(FormBuilder).nonNullable;
   private readonly marketplace = inject(DriverMarketplaceService);
   private readonly modals = inject(ModalController);
+  private readonly router = inject(Router);
+  private readonly freeFreight = inject(FreeFreightService);
+  protected readonly freeState = this.freeFreight.state;
 
   readonly freight = input.required<OpenFreight>();
   /** Vehicles that already fit the freight (type and weight). */
@@ -148,6 +211,11 @@ export class ProposalSheetComponent implements OnInit {
     if (only && this.vehicles().length === 1) {
       this.form.controls.vehicleId.setValue(only.id);
     }
+  }
+
+  protected async goToPlans(): Promise<void> {
+    await this.modals.dismiss(null, 'cancel');
+    await this.router.navigateByUrl('/driver/billing');
   }
 
   protected close(): Promise<boolean> {

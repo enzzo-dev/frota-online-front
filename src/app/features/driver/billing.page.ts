@@ -5,12 +5,14 @@ import { IonContent, IonIcon, IonInput, IonRefresher, IonRefresherContent, IonSp
 import { firstValueFrom } from 'rxjs';
 import { DriverBillingService } from '../../core/api/driver-billing.service';
 import { DriverWalletService } from '../../core/api/driver-wallet.service';
+import { FreeFreightService } from '../../core/api/free-freight.service';
 import { PayoutAccount, PlanOption, Subscription, SubscriptionOverview, SubscriptionPlan, WalletAccount } from '../../core/models';
 import { ConfirmService } from '../../core/ui/confirm.service';
 import { completeRefresh } from '../../core/ui/refresher';
 import { createRequestState } from '../../core/ui/request-state';
 import { ToastService } from '../../core/ui/toast.service';
 import { Poller } from '../../core/util/poller';
+import { FreeFreightBannerComponent } from '../../shared/components/free-freight-banner.component';
 import { PageBarComponent } from '../../shared/components/page-bar.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
 import { UtcPipe } from '../../shared/pipes/utc.pipe';
@@ -31,6 +33,7 @@ const WALLET_ID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-
     IonRefresher,
     IonRefresherContent,
     IonSpinner,
+    FreeFreightBannerComponent,
     PageBarComponent,
     ProblemAlertComponent,
     UtcPipe,
@@ -135,6 +138,7 @@ const WALLET_ID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-
       </ion-refresher>
 
       <div class="page page--wide page--with-bar">
+        <app-free-freight-banner [hideAction]="true" />
         <app-problem-alert [error]="load.error()" />
 
         @if (overview(); as o) {
@@ -284,6 +288,7 @@ const WALLET_ID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-
 export class BillingPage {
   private readonly api = inject(DriverBillingService);
   private readonly walletApi = inject(DriverWalletService);
+  private readonly freeFreight = inject(FreeFreightService);
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
 
@@ -312,6 +317,7 @@ export class BillingPage {
   protected readonly walletReady = computed(() => WALLET_ID.test(this.walletId().trim()));
 
   ionViewWillEnter(): void {
+    void this.freeFreight.refresh();
     void this.reload();
     if (this.connecting()) {
       this.walletPoller.start();

@@ -11,6 +11,7 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { DriverMarketplaceService } from '../../core/api/driver-marketplace.service';
 import { DriverService } from '../../core/api/driver.service';
+import { FreeFreightService } from '../../core/api/free-freight.service';
 import { OpenFreight, Proposal, Vehicle } from '../../core/models';
 import { VEHICLE_TYPE_LABEL } from '../../core/ui/labels';
 import { completeRefresh } from '../../core/ui/refresher';
@@ -22,6 +23,7 @@ import { formatDistance, formatDuration } from '../../core/util/route-format';
 import { StopView, fromOpenStops } from '../../core/util/stop-views';
 import { CountdownComponent } from '../../shared/components/countdown.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { FreeFreightBannerComponent } from '../../shared/components/free-freight-banner.component';
 import { HeroComponent } from '../../shared/components/hero.component';
 import { MapPin, MapViewComponent } from '../../shared/components/map-view.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
@@ -71,6 +73,7 @@ interface BoardItem {
     IonRefresherContent,
     CountdownComponent,
     EmptyStateComponent,
+    FreeFreightBannerComponent,
     HeroComponent,
     MapViewComponent,
     ProblemAlertComponent,
@@ -90,6 +93,7 @@ interface BoardItem {
           lede="Só aparecem fretes que cabem nos seus veículos. Você define o preço."
         />
 
+        <app-free-freight-banner />
         <app-problem-alert [error]="load.error()" />
 
         @if (items(); as list) {
@@ -189,6 +193,7 @@ interface BoardItem {
 export class FreightBoardPage {
   private readonly marketplace = inject(DriverMarketplaceService);
   private readonly driver = inject(DriverService);
+  private readonly freeFreight = inject(FreeFreightService);
   private readonly modals = inject(ModalController);
   private readonly toast = inject(ToastService);
 
@@ -249,6 +254,7 @@ export class FreightBoardPage {
   private readonly poller = new Poller(() => this.reload(), BOARD_POLL_MS);
 
   ionViewWillEnter(): void {
+    void this.freeFreight.refresh();
     void this.load.run(() => this.reload());
     this.poller.start();
   }

@@ -10,6 +10,7 @@ import {
 } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { DriverMarketplaceService } from '../../core/api/driver-marketplace.service';
+import { FreeFreightService } from '../../core/api/free-freight.service';
 import { Proposal, ProposalStatus } from '../../core/models';
 import { PROPOSAL_STATUS_VIEW } from '../../core/ui/labels';
 import { completeRefresh } from '../../core/ui/refresher';
@@ -19,6 +20,7 @@ import { ToastService } from '../../core/ui/toast.service';
 import { Poller } from '../../core/util/poller';
 import { CountdownComponent } from '../../shared/components/countdown.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
+import { FreeFreightBannerComponent } from '../../shared/components/free-freight-banner.component';
 import { HeroComponent } from '../../shared/components/hero.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
 import { StatusChipComponent } from '../../shared/components/status-chip.component';
@@ -42,6 +44,7 @@ const POLL_MS = 20_000;
     IonSegmentButton,
     CountdownComponent,
     EmptyStateComponent,
+    FreeFreightBannerComponent,
     HeroComponent,
     ProblemAlertComponent,
     StatusChipComponent,
@@ -59,6 +62,14 @@ const POLL_MS = 20_000;
           title="Minhas propostas"
           lede="Acompanhe o que você enviou. Quando o cliente aprova, a corrida aparece em Corridas."
         />
+
+        <app-free-freight-banner [compact]="true" />
+        @if (freeAtStake()) {
+          <div class="notice notice--error small" role="alert">
+            Você tem <strong>{{ pendingCount() }} propostas abertas</strong> e só um frete grátis. O cliente que aprovar
+            <strong>primeiro</strong> leva o frete grátis; as outras aprovações serão recusadas, a menos que você assine um plano.
+          </div>
+        }
 
         <ion-segment [value]="filter()" (ionChange)="onFilter($event.detail.value)">
           <ion-segment-button value="all">Todas</ion-segment-button>
@@ -117,6 +128,7 @@ export class ProposalsPage {
   private readonly marketplace = inject(DriverMarketplaceService);
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
+  private readonly freeFreight = inject(FreeFreightService);
 
   protected readonly statusView = PROPOSAL_STATUS_VIEW;
   protected readonly load = createRequestState();
@@ -137,9 +149,14 @@ export class ProposalsPage {
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   });
 
+  protected readonly pendingCount = computed(() => (this.proposals() ?? []).filter((p) => p.status === 'Pending').length);
+  /** Several open proposals compete for one free freight. */
+  protected readonly freeAtStake = computed(() => this.freeFreight.state() === 'available' && this.pendingCount() > 1);
+
   private readonly poller = new Poller(() => this.reload(), POLL_MS);
 
   ionViewWillEnter(): void {
+    void this.freeFreight.refresh();
     void this.load.run(() => this.reload());
     this.poller.start();
   }

@@ -11,6 +11,7 @@ import {
   throwError,
 } from 'rxjs';
 import { ApiClient } from '../http/api-client';
+import { PushService } from '../push/push.service';
 import { ApiError } from '../http/api-error';
 import { AuthResponse, LoginRequest, RegisterRequest, UserRole } from '../models';
 import { homeFor } from './home-routes';
@@ -20,6 +21,7 @@ import { SessionService } from './session.service';
 export class AuthService {
   private readonly api = inject(ApiClient);
   private readonly session = inject(SessionService);
+  private readonly push = inject(PushService);
   private readonly router = inject(Router);
 
   /** The refresh in progress, shared by every caller that hits a 401 at the same time. */
@@ -60,6 +62,8 @@ export class AuthService {
 
   /** Revokes the refresh token on the server (best effort) and forgets the session locally. */
   async logout(): Promise<void> {
+    // Unregister the device first: it needs the session that is about to end.
+    await this.push.stop();
     const refreshToken = this.session.refreshToken();
     if (refreshToken) {
       await firstValueFrom(

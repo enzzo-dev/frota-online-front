@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { IonIcon, IonLabel, IonTabBar, IonTabButton, IonTabs } from '@ionic/angular';
 import { NotificationBadgeService } from '../../core/api/notification-badge.service';
+import { PushService } from '../../core/push/push.service';
 import { SessionService } from '../../core/auth/session.service';
 import { USER_ROLE_LABEL } from '../../core/ui/labels';
 import { BrandMarkComponent } from '../../shared/components/brand-mark.component';
@@ -56,6 +57,7 @@ export interface TabItem {
 export class TabsShellComponent implements OnInit, OnDestroy {
   private readonly session = inject(SessionService);
   private readonly badge = inject(NotificationBadgeService);
+  private readonly push = inject(PushService);
 
   protected readonly unread = this.badge.unread;
   protected readonly bellLabel = computed(() =>
@@ -64,6 +66,7 @@ export class TabsShellComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.badge.start();
+    void this.push.start();
   }
 
   ngOnDestroy(): void {

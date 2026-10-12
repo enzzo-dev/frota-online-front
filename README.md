@@ -52,9 +52,13 @@ npm run build      # production build in dist/
   `/notifications`: inbox (all or unread only, "load more", mark one or all as read) and the two switches
   (`pushEnabled` for everyone, `newFreightAlerts` for drivers). Tapping an item opens its target by role
   (`core/ui/notification-view.ts`: `Freight`, `Proposal`, `Delivery`, `DriverProfile`, `Fee`, `Subscription`).
-- Push (FCM) is **not wired in the app**: `PUT /devices` and `DELETE /devices` exist in `NotificationsService` but need
-  a Firebase project (web config, service worker, or a Capacitor push plugin) to obtain the token. Until then the inbox
-  and the badge work by polling.
+- Push (FCM): the Firebase token lives in the native shell, like the Apple Pay token. The iOS/Android build must provide
+  `window.FrotaPush` with `register(): Promise<{ token, platform } | null>` (asks permission, returns the FCM token) and
+  `onPush(listener): () => void` (calls `listener` when a push arrives or is tapped). `core/push/push.service.ts` then
+  registers the device (`PUT /devices`), unregisters it on sign out, and turns each push into one refresh of the bell and
+  of every screen that is polling. While push works, polling is 6x slower (`Poller.slowdown`) and stays only as a safety
+  net; in a plain browser it runs at the normal pace. Polling never runs while the app is hidden, and runs once when it
+  comes back. This keeps Cloud Run requests low: the API is asked when something changed, not every few seconds.
 
 ## Payments (Asaas), subscription and uploads
 - Customer: after the delivery is completed, `/customer/deliveries/:id` offers **Pagar com Pix** (CPF/CNPJ of the payer,

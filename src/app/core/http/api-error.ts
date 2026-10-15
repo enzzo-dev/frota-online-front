@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ERROR_MESSAGES, GENERIC_ERROR_MESSAGE } from './error-messages';
+import { translateMissingCoordinates, translateValidation } from './validation-messages';
 
 /** Shape of the problem details JSON the API sends on failure. */
 interface ProblemBody {
@@ -71,12 +72,15 @@ export class ApiError extends Error {
     }
 
     // The server's text names the addresses involved, so it beats the generic one for these codes.
-    const message = (DETAIL_FIRST.has(code) ? detail : null) ?? ERROR_MESSAGES[code] ?? detail ?? GENERIC_ERROR_MESSAGE;
+    // Any other text from the API is in English and never reaches the screen: unknown codes get the generic message.
+    const message =
+      code === 'route.missing_coordinates' && detail !== null
+        ? translateMissingCoordinates(detail)
+        : (ERROR_MESSAGES[code] ?? GENERIC_ERROR_MESSAGE);
     return new ApiError(error.status, code, message, fieldErrors);
   }
 }
 
-const DETAIL_FIRST: ReadonlySet<string> = new Set(['route.missing_coordinates']);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -89,7 +93,7 @@ function parseFieldErrors(value: unknown): Record<string, string[]> {
   const result: Record<string, string[]> = {};
   for (const [field, messages] of Object.entries(value)) {
     if (Array.isArray(messages)) {
-      const list = messages.filter((m): m is string => typeof m === 'string');
+      const list = messages.filter((m): m is string => typeof m === 'string').map(translateValidation);
       if (list.length > 0) {
         result[field] = list;
       }

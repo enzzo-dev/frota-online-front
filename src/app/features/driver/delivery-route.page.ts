@@ -129,8 +129,11 @@ const CANCELLABLE: readonly DeliveryStatus[] = ['Scheduled', 'ToPickup', 'Incide
               }
             </div>
             <p class="muted small">{{ r.cargoWeightKg | number: '1.0-2' : 'pt-BR' }} kg</p>
-            <div class="progress" role="progressbar" [attr.aria-valuenow]="completed()" aria-valuemin="0" [attr.aria-valuemax]="r.totalStops">
-              <span [style.width.%]="percent()"></span>
+            <div class="progress-track">
+              <div class="progress" role="progressbar" [attr.aria-valuenow]="completed()" aria-valuemin="0" [attr.aria-valuemax]="r.totalStops">
+                <span [style.width.%]="percent()"></span>
+              </div>
+              <ion-icon class="progress-track__vehicle" src="icons/bus.svg" aria-hidden="true" [style.left.%]="percent()" />
             </div>
             <p class="small">{{ completed() }} de {{ r.totalStops }} paradas concluídas</p>
           </section>

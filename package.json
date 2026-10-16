@@ -17,6 +17,9 @@
     "@angular/forms": "^22.2.0",
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/angular": "^2.0.3",
+    "@capacitor/core": "^8.5.3",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@fontsource-variable/manrope": "^5.3.0",
     "@fontsource-variable/sora": "^5.3.0",
@@ -30,6 +33,7 @@
     "@angular/build": "^22.2.2",
     "@angular/cli": "^22.2.2",
     "@angular/compiler-cli": "^22.2.0",
+    "@capacitor/cli": "^8.5.3",
     "@types/leaflet": "^1.9.22",
     "prettier": "^3.8.1",
     "typescript": "~6.0.2"

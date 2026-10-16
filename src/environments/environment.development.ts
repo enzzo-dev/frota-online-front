@@ -1,5 +1,5 @@
-/** Development: `ng serve` forwards `/api` to the local API through `proxy.conf.json`. */
+/** Development API used by the browser and Android development builds. */
 export const environment = {
   production: false,
-  apiBaseUrl: '/api/v1',
+  apiBaseUrl: 'https://pm0bnm1c-62577.brs.devtunnels.ms/api/v1',
 };

@@ -1,3 +1,13 @@
+.onboarding-progress {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 24px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--white);
+}
+
 .stop-body h3 {
   font-size: 17px;
 }

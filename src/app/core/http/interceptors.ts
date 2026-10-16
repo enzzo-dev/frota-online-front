@@ -6,7 +6,13 @@ import { SessionService } from '../auth/session.service';
 import { API_BASE_URL } from '../config/api-base-url.token';
 import { ApiError } from './api-error';
 
-const PUBLIC_AUTH_PATHS = ['/auth/login', '/auth/register', '/auth/refresh'];
+const PUBLIC_AUTH_PATHS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/password/forgot',
+  '/auth/password/reset',
+];
 const NO_REFRESH_PATHS = [...PUBLIC_AUTH_PATHS, '/auth/logout'];
 
 function pathOf(url: string, baseUrl: string): string | null {

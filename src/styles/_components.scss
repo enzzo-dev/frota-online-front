@@ -620,6 +620,30 @@
   overflow: hidden;
 }
 
+.progress-track {
+  position: relative;
+  height: 24px;
+  margin-inline: 10px;
+}
+
+.progress-track > .progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.progress-track__vehicle {
+  position: absolute;
+  z-index: 1;
+  top: -2px;
+  width: 26px;
+  height: 26px;
+  color: var(--red);
+  transform: translateX(-50%);
+  transition: left 0.3s ease;
+}
+
 .progress > span {
   display: block;
   height: 100%;

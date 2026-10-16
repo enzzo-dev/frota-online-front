@@ -1,7 +1,7 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { IonContent, IonRefresher, IonRefresherContent } from '@ionic/angular';
+import { IonContent, IonIcon, IonRefresher, IonRefresherContent } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { CustomerDeliveriesService } from '../../core/api/customer-deliveries.service';
 import { FreightsService } from '../../core/api/freights.service';
@@ -33,6 +33,7 @@ const TRACK_POLL_MS = 5_000;
     CurrencyPipe,
     DatePipe,
     IonContent,
+    IonIcon,
     IonRefresher,
     IonRefresherContent,
     DeliveryPaymentComponent,
@@ -98,14 +99,17 @@ const TRACK_POLL_MS = 5_000;
             <p class="muted small">
               {{ vehicleLabel[d.vehicleType] }} · {{ d.vehicleModel }} · <span class="mono">{{ d.vehiclePlate }}</span>
             </p>
-            <div
-              class="progress"
-              role="progressbar"
-              [attr.aria-valuenow]="completed()"
-              aria-valuemin="0"
-              [attr.aria-valuemax]="d.stops.length"
-            >
-              <span [style.width.%]="percent()"></span>
+            <div class="progress-track">
+              <div
+                class="progress"
+                role="progressbar"
+                [attr.aria-valuenow]="completed()"
+                aria-valuemin="0"
+                [attr.aria-valuemax]="d.stops.length"
+              >
+                <span [style.width.%]="percent()"></span>
+              </div>
+              <ion-icon class="progress-track__vehicle" src="icons/bus.svg" aria-hidden="true" [style.left.%]="percent()" />
             </div>
             <div class="row row--between row--wrap">
               <p class="small">{{ completed() }} de {{ d.stops.length }} paradas concluídas</p>

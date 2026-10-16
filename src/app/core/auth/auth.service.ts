@@ -63,14 +63,20 @@ export class AuthService {
   /** Revokes the refresh token on the server (best effort) and forgets the session locally. */
   async logout(): Promise<void> {
     // Unregister the device first: it needs the session that is about to end.
-    await this.push.stop();
+    try {
+      await this.push.stop();
+    } catch {
+      // A native push plugin can fail while stopping; local sign-out must still complete.
+    }
     const refreshToken = this.session.refreshToken();
+    // Drop local credentials before the network request so a slow or offline API cannot keep
+    // this device signed in after the user chose to log out.
+    this.session.end();
     if (refreshToken) {
       await firstValueFrom(
         this.api.post<void>('/auth/logout', { refreshToken }).pipe(catchError(() => of(null))),
       );
     }
-    this.session.end();
     await this.router.navigateByUrl('/auth/login', { replaceUrl: true });
   }
 

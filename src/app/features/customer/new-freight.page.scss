@@ -29,6 +29,29 @@
   gap: 12px;
 }
 
+.stepper__track {
+  position: relative;
+  height: 24px;
+}
+
+.stepper__track .progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.stepper__vehicle {
+  position: absolute;
+  z-index: 1;
+  top: -2px;
+  width: 26px;
+  height: 26px;
+  color: var(--red);
+  transform: translateX(-50%);
+  transition: left 0.3s ease;
+}
+
 .stepper__list {
   list-style: none;
   margin: 0;

@@ -139,6 +139,12 @@ ion-input ion-input-password-toggle {
   border-top: 1px solid var(--line);
 }
 
+.auth__forgot {
+  align-self: flex-end;
+  margin-top: -8px;
+  color: var(--red-deep);
+}
+
 .auth__alt a {
   margin-left: 4px;
   color: var(--red);

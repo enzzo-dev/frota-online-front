@@ -86,8 +86,34 @@ const REVIEW_POLL_MS = 15_000;
             }
           </div>
 
+          @if (status() !== 'PendingReview' && status() !== 'Approved') {
+            <section class="onboarding-progress" aria-label="Progresso do cadastro">
+              <div class="row row--between row--wrap">
+                <strong>{{ completedSteps() }} de 5 etapas concluídas</strong>
+                <span class="small muted">Próximo: {{ nextStep().label }}</span>
+              </div>
+              <div
+                class="progress"
+                role="progressbar"
+                aria-label="Etapas concluídas do cadastro"
+                aria-valuemin="0"
+                aria-valuemax="5"
+                [attr.aria-valuenow]="completedSteps()"
+              >
+                <span [style.width.%]="completedSteps() * 20"></span>
+              </div>
+              @if (nextStep().key === 'terms') {
+                <a class="btn btn--sm btn--dark" routerLink="/terms">Ler e aceitar termos</a>
+              } @else {
+                <button class="btn btn--sm btn--dark" type="button" (click)="goToNextStep()">
+                  {{ nextStep().key === 'submit' ? 'Revisar e enviar' : 'Continuar cadastro' }}
+                </button>
+              }
+            </section>
+          }
+
           <ol class="route">
-            <li class="stop" [class.stop--done]="termsDone()">
+            <li id="driver-step-terms" class="stop" [class.stop--done]="termsDone()">
               <span class="stop-pin" aria-hidden="true">1</span>
               <div class="stop-body stack">
                 <h3>Termos</h3>
@@ -100,7 +126,7 @@ const REVIEW_POLL_MS = 15_000;
               </div>
             </li>
 
-            <li class="stop" [class.stop--done]="hasProfile()">
+            <li id="driver-step-profile" class="stop" [class.stop--done]="hasProfile()">
               <span class="stop-pin" aria-hidden="true">2</span>
               <div class="stop-body stack">
                 <h3>Dados do motorista</h3>
@@ -109,7 +135,7 @@ const REVIEW_POLL_MS = 15_000;
               </div>
             </li>
 
-            <li class="stop" [class.stop--done]="checklist()?.hasActiveVehicle">
+            <li id="driver-step-vehicle" class="stop" [class.stop--done]="checklist()?.hasActiveVehicle">
               <span class="stop-pin" aria-hidden="true">3</span>
               <div class="stop-body stack">
                 <h3>Veículos</h3>
@@ -118,7 +144,7 @@ const REVIEW_POLL_MS = 15_000;
               </div>
             </li>
 
-            <li class="stop" [class.stop--done]="checklist()?.hasDocument">
+            <li id="driver-step-documents" class="stop" [class.stop--done]="checklist()?.hasDocument">
               <span class="stop-pin" aria-hidden="true">4</span>
               <div class="stop-body stack">
                 <h3>Documentos</h3>
@@ -127,7 +153,7 @@ const REVIEW_POLL_MS = 15_000;
               </div>
             </li>
 
-            <li class="stop" [class.stop--done]="status() === 'PendingReview' || status() === 'Approved'">
+            <li id="driver-step-submit" class="stop" [class.stop--done]="status() === 'PendingReview' || status() === 'Approved'">
               <span class="stop-pin" aria-hidden="true">5</span>
               <div class="stop-body stack">
                 <h3>Enviar para análise</h3>
@@ -187,6 +213,20 @@ export class DriverProfilePage {
   protected readonly hasProfile = computed(() => !!this.store.profile());
   protected readonly checklist = computed(() => this.store.profile()?.checklist ?? null);
   protected readonly termsDone = computed(() => this.pendingTerms() === 0);
+  protected readonly nextStep = computed(() => {
+    if (!this.termsDone()) return { key: 'terms', label: 'aceitar os termos' } as const;
+    if (!this.hasProfile()) return { key: 'profile', label: 'preencher seus dados' } as const;
+    if (!this.checklist()?.hasActiveVehicle) return { key: 'vehicle', label: 'cadastrar um veículo' } as const;
+    if (!this.checklist()?.hasDocument) return { key: 'documents', label: 'enviar seus documentos' } as const;
+    return { key: 'submit', label: 'enviar para análise' } as const;
+  });
+  protected readonly completedSteps = computed(() =>
+    Number(this.termsDone()) +
+    Number(this.hasProfile()) +
+    Number(!!this.checklist()?.hasActiveVehicle) +
+    Number(!!this.checklist()?.hasDocument) +
+    Number(this.status() === 'PendingReview' || this.status() === 'Approved'),
+  );
   protected readonly isReady = computed(
     () => this.hasProfile() && this.termsDone() && !!this.checklist()?.hasActiveVehicle && !!this.checklist()?.hasDocument,
   );
@@ -234,6 +274,11 @@ export class DriverProfilePage {
   protected async refresh(event: Event): Promise<void> {
     await this.refreshAll();
     completeRefresh(event);
+  }
+
+  protected goToNextStep(): void {
+    const targetId = `driver-step-${this.nextStep().key}`;
+    document.getElementById(targetId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
   protected onProfileSaved(profile: DriverProfile): void {

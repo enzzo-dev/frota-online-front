@@ -72,6 +72,7 @@ import { notBlank } from '../../shared/forms/validators';
           >
             <ion-input-password-toggle slot="end" />
           </ion-input>
+          <a class="link-btn auth__forgot" routerLink="/auth/forgot-password">Esqueci minha senha</a>
           </div>
 
           <app-problem-alert [error]="request.error()" />

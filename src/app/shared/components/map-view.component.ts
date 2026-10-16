@@ -12,7 +12,7 @@ import {
   viewChild,
 } from '@angular/core';
 import type * as Leaflet from 'leaflet';
-import { GeoPoint, StopType } from '../../core/models';
+import { DriverLocation, GeoPoint, StopType } from '../../core/models';
 
 /** A pin on the map. `sequence` numbers it; `type` colours it (pickup black, delivery red). */
 export interface MapPin extends GeoPoint {
@@ -75,6 +75,16 @@ const BRAZIL_CENTER: [number, number] = [-14.2, -51.9];
     .map-pin--drop {
       background: #d7141a;
     }
+    .map-driver {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #1769e0;
+      border: 3px solid #fff;
+      box-shadow:
+        0 0 0 6px rgb(23 105 224 / 25%),
+        0 2px 6px rgb(0 0 0 / 35%);
+    }
     .map-pin--approx {
       border-radius: 50%;
       transform: none;
@@ -91,6 +101,8 @@ export class MapViewComponent implements OnDestroy {
   readonly path = input<readonly GeoPoint[]>([]);
   readonly approximate = input(false);
   readonly draggable = input(false);
+  /** Where the driver is now, drawn as a vehicle marker that moves without re-fitting the map. */
+  readonly driver = input<DriverLocation | null>(null);
   readonly ariaLabel = input('Mapa da rota');
   readonly pinMoved = output<GeoPoint>();
 
@@ -100,6 +112,8 @@ export class MapViewComponent implements OnDestroy {
   private lib: typeof Leaflet | null = null;
   private map: Leaflet.Map | null = null;
   private overlay: Leaflet.LayerGroup | null = null;
+  private driverLayer: Leaflet.LayerGroup | null = null;
+  private driverMarker: Leaflet.Marker | null = null;
   private resizer: ResizeObserver | null = null;
   private fittedKey = '';
   private destroyed = false;
@@ -118,6 +132,14 @@ export class MapViewComponent implements OnDestroy {
         return;
       }
       this.draw(pins, path, approximate, draggable);
+    });
+
+    effect(() => {
+      const driver = this.driver();
+      if (!this.ready()) {
+        return;
+      }
+      this.drawDriver(driver);
     });
   }
 
@@ -146,6 +168,7 @@ export class MapViewComponent implements OnDestroy {
     map.attributionControl.setPrefix(false);
     leaflet.tileLayer(TILE_URL, { maxZoom: 19, attribution: ATTRIBUTION }).addTo(map);
     this.overlay = leaflet.layerGroup().addTo(map);
+    this.driverLayer = leaflet.layerGroup().addTo(map);
     this.map = map;
 
     // Sheets and tabs resize after the first paint; Leaflet must be told.
@@ -219,6 +242,34 @@ export class MapViewComponent implements OnDestroy {
     }
 
     this.fit(map, L, pins, bounds, approximate);
+  }
+
+  private drawDriver(driver: DriverLocation | null): void {
+    const L = this.lib;
+    const layer = this.driverLayer;
+    if (!L || !layer) {
+      return;
+    }
+    if (driver === null) {
+      layer.clearLayers();
+      this.driverMarker = null;
+      return;
+    }
+    const at: Leaflet.LatLngTuple = [driver.latitude, driver.longitude];
+    if (this.driverMarker) {
+      this.driverMarker.setLatLng(at);
+      return;
+    }
+    this.driverMarker = L.marker(at, {
+      icon: L.divIcon({
+        className: '',
+        html: '<div class="map-driver"></div>',
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
+      }),
+      title: 'Motorista',
+      zIndexOffset: 1000,
+    }).addTo(layer);
   }
 
   private fit(

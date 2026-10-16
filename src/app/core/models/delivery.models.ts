@@ -74,6 +74,34 @@ export interface CustomerDeliverySummary {
   createdAt: string;
 }
 
+/** What the live tracking screen polls. `version` is opaque: it changes when anything on the delivery changes. */
+export interface DeliveryStatusResponse {
+  deliveryId: string;
+  status: DeliveryStatus;
+  totalStops: number;
+  completedStops: number;
+  payment: PaymentStatus | null;
+  lastEventAt: string | null;
+  /** Where the driver is right now. Only sent while the delivery is under way. */
+  driverLocation: DriverLocation | null;
+  version: string;
+}
+
+export interface DriverLocation {
+  latitude: number;
+  longitude: number;
+  heading: number | null;
+  speedKmh: number | null;
+  recordedAt: string;
+}
+
+export interface UpdateLocationRequest {
+  latitude: number;
+  longitude: number;
+  heading: number | null;
+  speedKmh: number | null;
+}
+
 export interface TimelineEvent {
   status: DeliveryStatus;
   occurredAt: string;

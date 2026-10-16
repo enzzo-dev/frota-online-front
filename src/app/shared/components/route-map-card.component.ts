@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { IonIcon, IonSpinner } from '@ionic/angular';
 import { ApiError } from '../../core/http/api-error';
-import { RouteMap } from '../../core/models';
+import { DriverLocation, RouteMap } from '../../core/models';
 import { formatDistance, formatDuration } from '../../core/util/route-format';
 import { MapPin, MapViewComponent } from './map-view.component';
 
@@ -28,7 +28,7 @@ import { MapPin, MapViewComponent } from './map-view.component';
           </div>
         </div>
 
-        <app-map-view [pins]="pins()" [path]="r.path" ariaLabel="Mapa da rota com as paradas" />
+        <app-map-view [pins]="pins()" [path]="r.path" [driver]="driver()" ariaLabel="Mapa da rota com as paradas" />
 
         @if (straightLine()) {
           <p class="field-hint">
@@ -78,6 +78,7 @@ import { MapPin, MapViewComponent } from './map-view.component';
 export class RouteMapCardComponent {
   readonly route = input<RouteMap | null>(null);
   readonly loading = input(false);
+  readonly driver = input<DriverLocation | null>(null);
   readonly error = input<ApiError | null>(null);
   /** Labels of the addresses that have no position, found before or after asking the API. */
   readonly missing = input<readonly string[]>([]);

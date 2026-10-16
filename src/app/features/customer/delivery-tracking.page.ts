@@ -6,7 +6,7 @@ import { firstValueFrom } from 'rxjs';
 import { CustomerDeliveriesService } from '../../core/api/customer-deliveries.service';
 import { FreightsService } from '../../core/api/freights.service';
 import { ApiError } from '../../core/http/api-error';
-import { CustomerDeliveryDetail, RouteMap } from '../../core/models';
+import { CustomerDeliveryDetail, DriverLocation, RouteMap } from '../../core/models';
 import { ConfirmService } from '../../core/ui/confirm.service';
 import { DELIVERY_STATUS_VIEW, PAYMENT_STATUS_VIEW, VEHICLE_TYPE_LABEL } from '../../core/ui/labels';
 import { completeRefresh } from '../../core/ui/refresher';
@@ -123,7 +123,12 @@ const TRACK_POLL_MS = 5_000;
             <div class="stack stack--lg">
               <section class="stack">
                 <h2>Paradas</h2>
-                <app-route-map-card [route]="route()" [loading]="routeLoading()" [error]="routeError()" />
+                <app-route-map-card
+                  [route]="route()"
+                  [loading]="routeLoading()"
+                  [error]="routeError()"
+                  [driver]="driverLocation()"
+                />
                 <app-stops-route [stops]="stops()" />
               </section>
             </div>
@@ -212,6 +217,8 @@ export class DeliveryTrackingPage {
   protected readonly route = signal<RouteMap | null>(null);
   protected readonly routeLoading = signal(false);
   protected readonly routeError = signal<ApiError | null>(null);
+  /** Where the driver is, from the light `/status`: it moves the pin without fetching the full delivery. */
+  protected readonly driverLocation = signal<DriverLocation | null>(null);
 
   protected readonly stops = computed(() => fromFreightStops(this.delivery()?.stops ?? []));
   protected readonly completed = computed(() => this.delivery()?.stops.filter((s) => s.completedAt !== null).length ?? 0);
@@ -291,6 +298,7 @@ export class DeliveryTrackingPage {
       return;
     }
     const status = await firstValueFrom(this.api.status(this.deliveryId));
+    this.driverLocation.set(status.driverLocation);
     if (status.version !== this.lastVersion) {
       // The change that ends the delivery (or settles its payment) also lands here: that is the last full fetch.
       await this.fetchDetail(status.version);
@@ -310,6 +318,7 @@ export class DeliveryTrackingPage {
   private async fetch(): Promise<void> {
     // The version is read first, so a change that lands while the detail loads is caught by the next check.
     const status = await firstValueFrom(this.api.status(this.deliveryId));
+    this.driverLocation.set(status.driverLocation);
     await this.fetchDetail(status.version);
   }
 

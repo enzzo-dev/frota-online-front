@@ -24,6 +24,7 @@ import {
   RouteStop,
 } from '../../core/models';
 import { SessionService } from '../../core/auth/session.service';
+import { DriverLocationReporter } from '../../core/location/driver-location-reporter';
 import { ConfirmService } from '../../core/ui/confirm.service';
 import { DELIVERY_STATUS_VIEW, PAYMENT_METHOD_LABEL } from '../../core/ui/labels';
 import { completeRefresh } from '../../core/ui/refresher';
@@ -129,6 +130,11 @@ const CANCELLABLE: readonly DeliveryStatus[] = ['Scheduled', 'ToPickup', 'Incide
               }
             </div>
             <p class="muted small">{{ r.cargoWeightKg | number: '1.0-2' : 'pt-BR' }} kg</p>
+            @if (reporter.denied()) {
+              <p class="small" role="alert">
+                Sem a permissão de localização o cliente não vê onde você está. Libere nas configurações do aparelho.
+              </p>
+            }
             <div class="progress-track">
               <div class="progress" role="progressbar" [attr.aria-valuenow]="completed()" aria-valuemin="0" [attr.aria-valuemax]="r.totalStops">
                 <span [style.width.%]="percent()"></span>
@@ -343,6 +349,7 @@ export class DeliveryRoutePage {
   private readonly session = inject(SessionService);
   private readonly confirm = inject(ConfirmService);
   private readonly toast = inject(ToastService);
+  protected readonly reporter = inject(DriverLocationReporter);
   protected readonly uploader = inject(FileUploader);
   private readonly deliveryId = inject(ActivatedRoute).snapshot.paramMap.get('id') ?? '';
 
@@ -418,6 +425,10 @@ export class DeliveryRoutePage {
 
   ionViewWillEnter(): void {
     void this.load.run(() => this.reload());
+  }
+
+  ionViewWillLeave(): void {
+    void this.reporter.stop();
   }
 
   protected async refresh(event: Event): Promise<void> {
@@ -614,6 +625,7 @@ export class DeliveryRoutePage {
   private async afterProgress(progress: DeliveryProgress, message: string): Promise<void> {
     this.progress.set(progress);
     this.status.set(progress.status);
+    this.syncLocation();
     await this.toast.show(message);
     await this.load.run(() => this.reload());
   }
@@ -625,9 +637,18 @@ export class DeliveryRoutePage {
     ]);
     this.route.set(route);
     this.status.set(summary.status);
+    this.syncLocation();
     this.paidInApp.set(summary.payment === 'Paid');
     this.progress.set(null);
     void this.loadMap();
+  }
+
+  private syncLocation(): void {
+    if (this.isRunning()) {
+      void this.reporter.start(this.deliveryId);
+    } else {
+      void this.reporter.stop();
+    }
   }
 
   private async loadMap(): Promise<void> {

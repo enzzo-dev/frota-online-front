@@ -5,7 +5,7 @@ import { DriverMarketplaceService } from '../api/driver-marketplace.service';
 import { ApiError } from '../http/api-error';
 
 /** The API keeps only the latest position, so sending more often than this just costs requests. */
-const MIN_INTERVAL_MS = 10_000;
+const MIN_INTERVAL_MS = 15_000;
 const MS_TO_KMH = 3.6;
 
 /**

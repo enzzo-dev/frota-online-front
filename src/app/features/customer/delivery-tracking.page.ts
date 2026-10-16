@@ -23,8 +23,8 @@ import { StopsRouteComponent } from '../../shared/components/stops-route.compone
 import { UtcPipe } from '../../shared/pipes/utc.pipe';
 import { DeliveryPaymentComponent } from './delivery-payment.component';
 
-/** The API has no push or websocket yet, so a running delivery is polled every few seconds. */
-const TRACK_POLL_MS = 5_000;
+/** The API has no push or websocket yet, so a delivery under way is polled every few seconds. */
+const TRACK_POLL_MS = 15_000;
 
 /** One delivery as its customer follows it: progress, stops, timeline, payment, and cancel before pickup. */
 @Component({
@@ -230,6 +230,10 @@ export class DeliveryTrackingPage {
     const status = this.delivery()?.status;
     return status !== undefined && status !== 'Delivered' && status !== 'Cancelled';
   });
+  protected readonly underway = computed(() => {
+    const status = this.delivery()?.status;
+    return status === 'ToPickup' || status === 'PickedUp' || status === 'InTransit';
+  });
   /** Delivered and not paid yet: the customer can pay by Pix in the app. */
   protected readonly payable = computed(() => {
     const d = this.delivery();
@@ -311,7 +315,7 @@ export class DeliveryTrackingPage {
     if (d === null) {
       return false;
     }
-    return this.running() || (d.status === 'Delivered' && (d.payment === 'Pending' || (this.awaitingPayment() && d.payment !== 'Paid')));
+    return this.underway() || (d.status === 'Delivered' && (d.payment === 'Pending' || (this.awaitingPayment() && d.payment !== 'Paid')));
   }
 
   /** First load, pull to refresh and after an action: always the full delivery. */

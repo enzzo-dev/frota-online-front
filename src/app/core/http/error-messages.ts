@@ -78,6 +78,18 @@ export const ERROR_MESSAGES: Readonly<Record<string, string>> = {
   'subscription.required': 'Seu frete grátis já foi usado. Assine um plano para enviar novas propostas.',
   'subscription.too_many_vehicles': 'O plano Básico vale para até 3 veículos ativos. Desative veículos ou escolha o Completo.',
   'subscription.vehicle_limit': 'O plano Básico vale para até 3 veículos ativos. Passe para o Completo para cadastrar mais.',
+  'admin.driver_not_found': 'Motorista não encontrado.',
+  'admin.file_not_found': 'Arquivo não encontrado para este motorista.',
+  'admin.incomplete_file': 'O motorista não tem veículo ativo ou documento. Recuse o cadastro para ele corrigir.',
+  'delivery.stop_not_found': 'Esta parada não pertence à entrega.',
+  'driver.invalid_status': 'Só cadastros em rascunho ou recusados podem ser enviados para análise.',
+  'driver.last_vehicle': 'Um motorista em análise ou aprovado precisa manter pelo menos um veículo ativo.',
+  'driver.vehicle_not_found': 'Veículo não encontrado.',
+  'fee.exceeds_balance': 'O valor é maior que o saldo de taxas em aberto.',
+  'terms.not_active': 'Esta versão não está mais ativa. Aceite a versão atual.',
+  'terms.not_found': 'Termo não encontrado.',
+  'terms.version_exists': 'Esta versão já foi publicada para este tipo de termo.',
+  'wallet.authorization_invalid': 'O link de autorização é inválido ou expirou. Comece a conexão de novo.',
   'route.missing_coordinates': 'Alguns endereços ainda não têm posição no mapa. Edite-os e use "Localizar no mapa".',
 };
 

@@ -24,7 +24,7 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
 import { DeliveryPaymentComponent } from './delivery-payment.component';
 
 /** The API has no push or websocket yet, so a running delivery is polled every few seconds. */
-const TRACK_POLL_MS = 5_000;
+const TRACK_POLL_MS = 15_000;
 
 /** One delivery as its customer follows it: progress, stops, timeline, payment, and cancel before pickup. */
 @Component({

@@ -233,12 +233,10 @@ export class DeliveryTrackingPage {
     return status === 'Scheduled' || status === 'ToPickup';
   });
 
-  private readonly poller = new Poller(async () => {
-    // Keeps going after delivery while a payment is waiting, so the payment shows up by itself.
-    if (this.running() || (this.awaitingPayment() && this.payable())) {
-      await this.fetch();
-    }
-  }, TRACK_POLL_MS);
+  /** The `version` of the last status seen. The full delivery is fetched again only when it changes. */
+  private lastVersion: string | null = null;
+
+  private readonly poller = new Poller(() => this.checkStatus(), TRACK_POLL_MS);
   private routeRequested = false;
 
   ionViewWillEnter(): void {
@@ -283,8 +281,41 @@ export class DeliveryTrackingPage {
     await this.load.run(() => this.fetch());
   }
 
+  /**
+   * The live check, every few seconds: only the light `/status`. The full delivery is fetched when its `version`
+   * changed. It does nothing once the delivery is over and its payment is settled, and the poller itself does not
+   * run while the app is in the background (it checks again as soon as the app comes back).
+   */
+  private async checkStatus(): Promise<void> {
+    if (!this.shouldPoll()) {
+      return;
+    }
+    const status = await firstValueFrom(this.api.status(this.deliveryId));
+    if (status.version !== this.lastVersion) {
+      // The change that ends the delivery (or settles its payment) also lands here: that is the last full fetch.
+      await this.fetchDetail(status.version);
+    }
+  }
+
+  /** Delivery still running, or delivered with a payment that is waiting for the provider. */
+  private shouldPoll(): boolean {
+    const d = this.delivery();
+    if (d === null) {
+      return false;
+    }
+    return this.running() || (d.status === 'Delivered' && (d.payment === 'Pending' || (this.awaitingPayment() && d.payment !== 'Paid')));
+  }
+
+  /** First load, pull to refresh and after an action: always the full delivery. */
   private async fetch(): Promise<void> {
+    // The version is read first, so a change that lands while the detail loads is caught by the next check.
+    const status = await firstValueFrom(this.api.status(this.deliveryId));
+    await this.fetchDetail(status.version);
+  }
+
+  private async fetchDetail(version: string): Promise<void> {
     const detail = await firstValueFrom(this.api.get(this.deliveryId));
+    this.lastVersion = version;
     this.delivery.set(detail);
     if (!this.routeRequested) {
       this.routeRequested = true;

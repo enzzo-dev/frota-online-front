@@ -74,6 +74,17 @@ export interface CustomerDeliverySummary {
   createdAt: string;
 }
 
+/** What the live tracking screen polls. `version` is opaque: it changes when anything on the delivery changes. */
+export interface DeliveryStatusResponse {
+  deliveryId: string;
+  status: DeliveryStatus;
+  totalStops: number;
+  completedStops: number;
+  payment: PaymentStatus | null;
+  lastEventAt: string | null;
+  version: string;
+}
+
 export interface TimelineEvent {
   status: DeliveryStatus;
   occurredAt: string;

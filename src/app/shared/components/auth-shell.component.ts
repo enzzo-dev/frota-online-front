@@ -12,7 +12,7 @@ import { BrandMarkComponent } from './brand-mark.component';
   imports: [BrandMarkComponent, IonIcon],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="shell">
+    <div class="shell" [class.shell--compact]="compact()">
       <div class="shell__bg" aria-hidden="true">
         <span class="shell__grid"></span>
         <span class="shell__orb shell__orb--a"></span>
@@ -23,7 +23,9 @@ import { BrandMarkComponent } from './brand-mark.component';
       <section class="shell__pitch">
         <p class="shell__brand"><app-brand-mark [size]="34" /> Frota Online</p>
         <h1 class="shell__title">{{ title() }}</h1>
-        <p class="shell__lede">{{ lede() }}</p>
+        @if (lede()) {
+          <p class="shell__lede">{{ lede() }}</p>
+        }
 
         <svg class="shell__route" viewBox="0 0 360 120" aria-hidden="true">
           <defs>
@@ -65,4 +67,5 @@ import { BrandMarkComponent } from './brand-mark.component';
 export class AuthShellComponent {
   readonly title = input.required<string>();
   readonly lede = input<string>('');
+  readonly compact = input(false);
 }

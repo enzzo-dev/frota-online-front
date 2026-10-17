@@ -27,7 +27,13 @@ export class SignatureService {
       }),
     );
     await this.put(ticket, image);
-    await firstValueFrom(this.api.post<void>('/signatures', { type, freightId, storagePath: ticket.storagePath }));
+    try {
+      await firstValueFrom(this.api.post<void>('/signatures', { type, freightId, storagePath: ticket.storagePath }));
+    } catch (error) {
+      if (!(ApiError.is(error) && error.code === 'signature.already_collected')) {
+        throw error;
+      }
+    }
   }
 
   private async put(ticket: SignatureUploadTicket, image: Blob): Promise<void> {

@@ -34,7 +34,7 @@ import { createRequestState } from '../../core/ui/request-state';
 import { ToastService } from '../../core/ui/toast.service';
 import { googleMapsNavUrl, wazeNavUrl } from '../../core/util/address-format';
 import { StopView, fromRouteStops } from '../../core/util/stop-views';
-import { DriverSignatureSheetComponent } from './driver-signature-sheet.component';
+import { DeliverySignatures, DeliverySignaturesSheetComponent } from './delivery-signatures-sheet.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { PageBarComponent } from '../../shared/components/page-bar.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
@@ -383,7 +383,7 @@ export class DeliveryRoutePage {
   private readonly driver = inject(DriverService);
   private readonly session = inject(SessionService);
   private readonly confirm = inject(ConfirmService);
-  private readonly signatures = inject(SignatureService);
+  private readonly signatureApi = inject(SignatureService);
   private readonly modals = inject(ModalController);
   private readonly toast = inject(ToastService);
   protected readonly reporter = inject(DriverLocationReporter);
@@ -411,7 +411,7 @@ export class DeliveryRoutePage {
   protected readonly placeProblem = signal<string | null>(null);
   protected readonly proof = signal<File | null>(null);
   protected readonly proofProblem = signal<string | null>(null);
-  private driverSigned = false;
+  private signaturesSent = false;
 
   // Payment, after delivery.
   protected readonly paymentMethod = signal<PaymentMethod>('Pix');
@@ -490,30 +490,32 @@ export class DeliveryRoutePage {
     }
   }
 
-  private async askSignature(): Promise<Blob | null> {
+  private async askSignatures(): Promise<DeliverySignatures | null> {
     const sheet = await this.modals.create({
-      component: DriverSignatureSheetComponent,
+      component: DeliverySignaturesSheetComponent,
       backdropDismiss: false,
       cssClass: 'sheet',
     });
     await sheet.present();
-    const { data, role } = await sheet.onDidDismiss<Blob>();
+    const { data, role } = await sheet.onDidDismiss<DeliverySignatures>();
     return role === 'confirm' && data ? data : null;
   }
 
   protected async completeNext(stop: RouteStop): Promise<void> {
     const last = this.completed() + 1 >= (this.route()?.totalStops ?? 0);
-    let signature: Blob | null = null;
-    if (last && !this.driverSigned) {
-      signature = await this.askSignature();
-      if (!signature) {
+    let signatures: DeliverySignatures | null = null;
+    if (last && !this.signaturesSent) {
+      signatures = await this.askSignatures();
+      if (!signatures) {
         return;
       }
     }
     const progress = await this.act(async () => {
-      if (signature) {
-        await this.signatures.submit('Driver', this.route()?.freightRequestId ?? '', signature);
-        this.driverSigned = true;
+      if (signatures) {
+        const freightId = this.route()?.freightRequestId ?? '';
+        await this.signatureApi.submit('Driver', freightId, signatures.driver);
+        await this.signatureApi.submit('Customer', freightId, signatures.customer);
+        this.signaturesSent = true;
       }
       const point = this.place();
       const proofId = await this.registerProof();

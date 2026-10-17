@@ -129,12 +129,12 @@ ion-alert .alert-wrapper {
   overflow: hidden;
 }
 
-ion-alert .alert-head {
+ion-alert .alert-wrapper .alert-head {
   padding: 26px 22px 6px;
   text-align: center;
 }
 
-ion-alert .alert-title {
+ion-alert .alert-wrapper .alert-title {
   margin: 0;
   font-family: var(--font-display);
   font-size: 20px;
@@ -144,7 +144,7 @@ ion-alert .alert-title {
   color: var(--black);
 }
 
-ion-alert .alert-message {
+ion-alert .alert-wrapper .alert-message {
   padding: 8px 22px 6px;
   font-size: 15px;
   line-height: 1.45;
@@ -153,11 +153,11 @@ ion-alert .alert-message {
   max-height: 50vh;
 }
 
-ion-alert .alert-input-group {
+ion-alert .alert-wrapper .alert-input-group {
   padding: 8px 22px 0;
 }
 
-ion-alert .alert-input {
+ion-alert .alert-wrapper .alert-input {
   border: 1.5px solid var(--field-line);
   border-radius: 14px;
   padding: 10px 12px;
@@ -166,12 +166,12 @@ ion-alert .alert-input {
   color: var(--black);
 }
 
-ion-alert .alert-input:focus {
+ion-alert .alert-wrapper .alert-input:focus {
   border-color: var(--red);
   outline: none;
 }
 
-ion-alert .alert-button-group {
+ion-alert .alert-wrapper .alert-button-group {
   display: flex;
   flex-direction: column-reverse;
   flex-wrap: nowrap;
@@ -179,10 +179,13 @@ ion-alert .alert-button-group {
   padding: 16px 22px 22px;
 }
 
-ion-alert .alert-button {
+ion-alert .alert-wrapper .alert-button-group .alert-button {
+  flex: none;
   width: 100%;
+  height: 46px;
   min-height: 46px;
   margin: 0;
+  padding: 0 16px;
   border-radius: 999px;
   font-family: var(--font-body);
   font-size: 15px;
@@ -193,18 +196,18 @@ ion-alert .alert-button {
   color: var(--white);
 }
 
-ion-alert .alert-button .alert-button-inner {
+ion-alert .alert-wrapper .alert-button-group .alert-button .alert-button-inner {
   justify-content: center;
 }
 
-ion-alert .alert-button.alert-button-role-cancel {
+ion-alert .alert-wrapper .alert-button-group .alert-button.alert-button-role-cancel {
   background: transparent;
   color: var(--black);
   box-shadow: inset 0 0 0 1.5px var(--black);
 }
 
-ion-alert .alert-button.alert-button--danger,
-ion-alert .alert-button.alert-button-role-destructive {
+ion-alert .alert-wrapper .alert-button-group .alert-button.alert-button--danger,
+ion-alert .alert-wrapper .alert-button-group .alert-button.alert-button-role-destructive {
   background: var(--red);
   color: var(--white);
 }

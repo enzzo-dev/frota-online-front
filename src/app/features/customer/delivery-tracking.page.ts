@@ -22,6 +22,7 @@ import { StatusChipComponent } from '../../shared/components/status-chip.compone
 import { StopsRouteComponent } from '../../shared/components/stops-route.component';
 import { UtcPipe } from '../../shared/pipes/utc.pipe';
 import { DeliveryPaymentComponent } from './delivery-payment.component';
+import { DeliverySignatureComponent } from './delivery-signature.component';
 
 /** The API has no push or websocket yet, so a delivery under way is polled every few seconds. */
 const TRACK_POLL_MS = 15_000;
@@ -37,6 +38,7 @@ const TRACK_POLL_MS = 15_000;
     IonRefresher,
     IonRefresherContent,
     DeliveryPaymentComponent,
+    DeliverySignatureComponent,
     DeliveryTimelineComponent,
     PageBarComponent,
     ProblemAlertComponent,
@@ -134,6 +136,10 @@ const TRACK_POLL_MS = 15_000;
             </div>
 
             <div class="stack stack--lg">
+              @if (signable()) {
+                <app-delivery-signature [freightId]="d.freightRequestId" />
+              }
+
               <section class="card stack">
                 <h3>Pagamento</h3>
                 <dl class="kv">
@@ -225,6 +231,10 @@ export class DeliveryTrackingPage {
   protected readonly percent = computed(() => {
     const total = this.delivery()?.stops.length ?? 0;
     return total === 0 ? 0 : Math.round((this.completed() / total) * 100);
+  });
+  protected readonly signable = computed(() => {
+    const status = this.delivery()?.status;
+    return status === 'PickedUp' || status === 'InTransit';
   });
   protected readonly running = computed(() => {
     const status = this.delivery()?.status;

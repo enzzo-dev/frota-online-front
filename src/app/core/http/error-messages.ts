@@ -49,6 +49,7 @@ export const ERROR_MESSAGES: Readonly<Record<string, string>> = {
   'delivery.not_found': 'Entrega não encontrada.',
   'delivery.stop_out_of_order': 'As paradas seguem a ordem da rota. Conclua primeiro a parada indicada.',
   'delivery.invalid_proof': 'O comprovante não é válido: use um arquivo de comprovante de entrega seu.',
+  'delivery.signatures_missing': 'A entrega só pode ser concluída com a assinatura do motorista e a do cliente. Peça ao cliente para assinar pelo app dele.',
   'delivery.invalid_status': 'Essa ação não vale para o status atual da entrega. Atualizamos a tela.',
   'payment.already_confirmed': 'O pagamento desta entrega já foi confirmado.',
   'payment.not_delivered': 'O pagamento só pode ser confirmado depois que a entrega for concluída.',

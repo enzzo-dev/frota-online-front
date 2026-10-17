@@ -8,10 +8,12 @@ import {
   IonRefresherContent,
   IonSpinner,
   IonTextarea,
+  ModalController,
 } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { DriverMarketplaceService } from '../../core/api/driver-marketplace.service';
 import { DriverService } from '../../core/api/driver.service';
+import { SignatureService } from '../../core/api/signature.service';
 import { ApiError } from '../../core/http/api-error';
 import {
   DeliveryProgress,
@@ -32,6 +34,7 @@ import { createRequestState } from '../../core/ui/request-state';
 import { ToastService } from '../../core/ui/toast.service';
 import { googleMapsNavUrl, wazeNavUrl } from '../../core/util/address-format';
 import { StopView, fromRouteStops } from '../../core/util/stop-views';
+import { DriverSignatureSheetComponent } from './driver-signature-sheet.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { PageBarComponent } from '../../shared/components/page-bar.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
@@ -380,6 +383,8 @@ export class DeliveryRoutePage {
   private readonly driver = inject(DriverService);
   private readonly session = inject(SessionService);
   private readonly confirm = inject(ConfirmService);
+  private readonly signatures = inject(SignatureService);
+  private readonly modals = inject(ModalController);
   private readonly toast = inject(ToastService);
   protected readonly reporter = inject(DriverLocationReporter);
   protected readonly uploader = inject(FileUploader);
@@ -406,6 +411,7 @@ export class DeliveryRoutePage {
   protected readonly placeProblem = signal<string | null>(null);
   protected readonly proof = signal<File | null>(null);
   protected readonly proofProblem = signal<string | null>(null);
+  private driverSigned = false;
 
   // Payment, after delivery.
   protected readonly paymentMethod = signal<PaymentMethod>('Pix');
@@ -484,20 +490,31 @@ export class DeliveryRoutePage {
     }
   }
 
+  private async askSignature(): Promise<Blob | null> {
+    const sheet = await this.modals.create({
+      component: DriverSignatureSheetComponent,
+      backdropDismiss: false,
+      cssClass: 'sheet',
+    });
+    await sheet.present();
+    const { data, role } = await sheet.onDidDismiss<Blob>();
+    return role === 'confirm' && data ? data : null;
+  }
+
   protected async completeNext(stop: RouteStop): Promise<void> {
     const last = this.completed() + 1 >= (this.route()?.totalStops ?? 0);
-    if (last) {
-      const ok = await this.confirm.confirm({
-        header: 'Concluir a última parada?',
-        message: 'Isso encerra a entrega e lança a taxa da plataforma no seu extrato.',
-        confirmText: 'Concluir',
-        cancelText: 'Voltar',
-      });
-      if (!ok) {
+    let signature: Blob | null = null;
+    if (last && !this.driverSigned) {
+      signature = await this.askSignature();
+      if (!signature) {
         return;
       }
     }
     const progress = await this.act(async () => {
+      if (signature) {
+        await this.signatures.submit('Driver', this.route()?.freightRequestId ?? '', signature);
+        this.driverSigned = true;
+      }
       const point = this.place();
       const proofId = await this.registerProof();
       return firstValueFrom(

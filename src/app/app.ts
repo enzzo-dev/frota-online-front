@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
 import { IonApp, IonRouterOutlet } from '@ionic/angular';
+import { HardwareBackService } from './core/navigation/hardware-back.service';
 
 @Component({
   selector: 'app-root',
@@ -35,9 +36,12 @@ import { IonApp, IonRouterOutlet } from '@ionic/angular';
   `,
 })
 export class App implements OnInit {
+  private readonly hardwareBack = inject(HardwareBackService);
+
   protected readonly showSplash = signal(true);
 
   ngOnInit(): void {
+    this.hardwareBack.start();
     window.setTimeout(() => this.showSplash.set(false), 2800);
   }
 }

@@ -24,6 +24,8 @@ export interface MapPin extends GeoPoint {
 const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>';
 /** Radius of the circle that stands for "somewhere around here" on approximate pins. */
+const TRUCK_SVG =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h11a1 1 0 0 1 1 1v2h3.2a1 1 0 0 1 .8.4l2.6 3.5c.1.2.4.7.4 1.1V16a1 1 0 0 1-1 1h-1.1a2.9 2.9 0 0 1-5.8 0H9.9a2.9 2.9 0 0 1-5.8 0H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm13 4.5V12h4.5l-1.9-2.5H16ZM7 15.2a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6Zm10 0a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6Z"/></svg>';
 const APPROX_RADIUS_M = 1200;
 const BRAZIL_CENTER: [number, number] = [-14.2, -51.9];
 
@@ -76,14 +78,21 @@ const BRAZIL_CENTER: [number, number] = [-14.2, -51.9];
       background: #d7141a;
     }
     .map-driver {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #fff;
+      border: 3px solid #d7141a;
+      box-shadow:
+        0 0 0 6px rgb(215 20 26 / 22%),
+        0 2px 6px rgb(0 0 0 / 35%);
+    }
+    .map-driver svg {
       width: 22px;
       height: 22px;
-      border-radius: 50%;
-      background: #1769e0;
-      border: 3px solid #fff;
-      box-shadow:
-        0 0 0 6px rgb(23 105 224 / 25%),
-        0 2px 6px rgb(0 0 0 / 35%);
+      fill: #d7141a;
     }
     .map-pin--approx {
       border-radius: 50%;
@@ -263,9 +272,9 @@ export class MapViewComponent implements OnDestroy {
     this.driverMarker = L.marker(at, {
       icon: L.divIcon({
         className: '',
-        html: '<div class="map-driver"></div>',
-        iconSize: [22, 22],
-        iconAnchor: [11, 11],
+        html: `<div class="map-driver">${TRUCK_SVG}</div>`,
+        iconSize: [38, 38],
+        iconAnchor: [19, 19],
       }),
       title: 'Motorista',
       zIndexOffset: 1000,

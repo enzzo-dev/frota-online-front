@@ -411,7 +411,8 @@ export class DeliveryRoutePage {
   protected readonly placeProblem = signal<string | null>(null);
   protected readonly proof = signal<File | null>(null);
   protected readonly proofProblem = signal<string | null>(null);
-  private signaturesSent = false;
+  private readonly driverSigned = signal(false);
+  private readonly customerSigned = signal(false);
 
   // Payment, after delivery.
   protected readonly paymentMethod = signal<PaymentMethod>('Pix');
@@ -493,6 +494,7 @@ export class DeliveryRoutePage {
   private async askSignatures(): Promise<DeliverySignatures | null> {
     const sheet = await this.modals.create({
       component: DeliverySignaturesSheetComponent,
+      componentProps: { needDriver: !this.driverSigned(), needCustomer: !this.customerSigned() },
       backdropDismiss: false,
       cssClass: 'sheet',
     });
@@ -504,7 +506,7 @@ export class DeliveryRoutePage {
   protected async completeNext(stop: RouteStop): Promise<void> {
     const last = this.completed() + 1 >= (this.route()?.totalStops ?? 0);
     let signatures: DeliverySignatures | null = null;
-    if (last && !this.signaturesSent) {
+    if (last && (!this.driverSigned() || !this.customerSigned())) {
       signatures = await this.askSignatures();
       if (!signatures) {
         return;
@@ -513,9 +515,14 @@ export class DeliveryRoutePage {
     const progress = await this.act(async () => {
       if (signatures) {
         const freightId = this.route()?.freightRequestId ?? '';
-        await this.signatureApi.submit('Driver', freightId, signatures.driver);
-        await this.signatureApi.submit('Customer', freightId, signatures.customer);
-        this.signaturesSent = true;
+        if (signatures.driver) {
+          await this.signatureApi.submit('Driver', freightId, signatures.driver);
+          this.driverSigned.set(true);
+        }
+        if (signatures.customer) {
+          await this.signatureApi.submit('Customer', freightId, signatures.customer);
+          this.customerSigned.set(true);
+        }
       }
       const point = this.place();
       const proofId = await this.registerProof();
@@ -694,6 +701,8 @@ export class DeliveryRoutePage {
     this.status.set(summary.status);
     this.syncLocation();
     this.paidInApp.set(summary.payment === 'Paid');
+    this.driverSigned.set(summary.driverSigned === true);
+    this.customerSigned.set(summary.customerSigned === true);
     this.progress.set(null);
     void this.loadMap();
   }

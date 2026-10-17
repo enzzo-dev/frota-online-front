@@ -85,6 +85,8 @@ export interface DeliveryStatusResponse {
   /** Where the driver is right now. Only sent while the delivery is under way. */
   driverLocation: DriverLocation | null;
   version: string;
+  driverSigned?: boolean;
+  customerSigned?: boolean;
 }
 
 export interface DriverLocation {

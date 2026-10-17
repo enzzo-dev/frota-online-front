@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal, viewChild } from '@angular/core';
 import { IonContent, IonIcon, IonSpinner, ModalController } from '@ionic/angular';
 import { SignaturePadComponent } from '../../shared/components/signature-pad.component';
 
 export interface DeliverySignatures {
-  readonly driver: Blob;
-  readonly customer: Blob;
+  readonly driver: Blob | null;
+  readonly customer: Blob | null;
 }
 
 @Component({
@@ -80,6 +80,7 @@ export interface DeliverySignatures {
           cliente. Concluir encerra a entrega e lança a taxa da plataforma no seu extrato.
         </p>
 
+        @if (needDriver()) {
         <section class="party" aria-label="Assinatura do motorista">
           <div class="party__head">
             <span class="party__title">Motorista</span>
@@ -91,7 +92,9 @@ export interface DeliverySignatures {
           </div>
           <app-signature-pad #driverPad (signedChange)="driverSigned.set($event)" />
         </section>
+        }
 
+        @if (needCustomer()) {
         <section class="party" aria-label="Assinatura do cliente">
           <div class="party__head">
             <span class="party__title">Cliente</span>
@@ -103,6 +106,7 @@ export interface DeliverySignatures {
           </div>
           <app-signature-pad #customerPad (signedChange)="customerSigned.set($event)" />
         </section>
+        }
 
         <button class="btn btn--block" type="button" [disabled]="!ready() || busy()" (click)="confirm()">
           @if (busy()) {
@@ -118,13 +122,18 @@ export interface DeliverySignatures {
 })
 export class DeliverySignaturesSheetComponent {
   private readonly modals = inject(ModalController);
-  private readonly driverPad = viewChild.required<SignaturePadComponent>('driverPad');
-  private readonly customerPad = viewChild.required<SignaturePadComponent>('customerPad');
+  readonly needDriver = input(true);
+  readonly needCustomer = input(true);
+
+  private readonly driverPad = viewChild<SignaturePadComponent>('driverPad');
+  private readonly customerPad = viewChild<SignaturePadComponent>('customerPad');
 
   protected readonly driverSigned = signal(false);
   protected readonly customerSigned = signal(false);
   protected readonly busy = signal(false);
-  protected readonly ready = computed(() => this.driverSigned() && this.customerSigned());
+  protected readonly ready = computed(
+    () => (!this.needDriver() || this.driverSigned()) && (!this.needCustomer() || this.customerSigned()),
+  );
 
   protected close(): Promise<boolean> {
     return this.modals.dismiss(null, 'cancel');
@@ -136,10 +145,14 @@ export class DeliverySignaturesSheetComponent {
     }
     this.busy.set(true);
     try {
-      const [driver, customer] = await Promise.all([this.driverPad().toBlob(), this.customerPad().toBlob()]);
-      if (driver && customer) {
-        await this.modals.dismiss({ driver, customer } satisfies DeliverySignatures, 'confirm');
+      const [driver, customer] = await Promise.all([
+        this.driverPad()?.toBlob() ?? Promise.resolve(null),
+        this.customerPad()?.toBlob() ?? Promise.resolve(null),
+      ]);
+      if ((this.needDriver() && !driver) || (this.needCustomer() && !customer)) {
+        return;
       }
+      await this.modals.dismiss({ driver, customer } satisfies DeliverySignatures, 'confirm');
     } finally {
       this.busy.set(false);
     }

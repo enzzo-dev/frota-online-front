@@ -246,7 +246,10 @@ ion-toolbar.plain {
 
 ion-toolbar.plain ion-title {
   position: absolute;
-  inset-inline: 0;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding-inline: 96px;
   text-align: center;
   font-family: var(--font-display);

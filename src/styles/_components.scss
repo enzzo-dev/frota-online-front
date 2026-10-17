@@ -12,6 +12,7 @@
     linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
   background-size: 44px 44px;
+  text-align: center;
 }
 
 .hero::after {
@@ -38,7 +39,8 @@
 }
 
 .hero__eyebrow {
-  display: inline-flex;
+  display: flex;
+  justify-content: center;
   align-items: center;
   gap: 10px;
   margin-bottom: 18px;
@@ -53,17 +55,19 @@
   line-height: 1.06;
   letter-spacing: -0.03em;
   max-width: 14em;
-  margin-bottom: 14px;
+  margin: 0 auto 14px;
 }
 
 .hero__lede {
   font-size: 16px;
   max-width: 52ch;
+  margin-inline: auto;
   color: #e2e2e6;
 }
 
 .hero__actions {
   display: flex;
+  justify-content: center;
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 22px;
@@ -74,10 +78,11 @@
   height: 6px;
   border-radius: 999px;
   max-width: 320px;
+  margin-inline: auto;
   background: repeating-linear-gradient(90deg, var(--red) 0 28px, transparent 28px 44px);
-  -webkit-mask: linear-gradient(90deg, #000 70%, transparent);
-  mask: linear-gradient(90deg, #000 70%, transparent);
-  transform-origin: left;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent);
+  transform-origin: center;
   animation: draw 0.9s ease-out both;
 }
 

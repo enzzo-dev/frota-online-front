@@ -105,9 +105,15 @@ const CANCELLABLE: readonly DeliveryStatus[] = ['Scheduled', 'ToPickup', 'Incide
       gap: 10px;
       flex-wrap: wrap;
     }
-    .file-row input[type='file'] {
-      max-width: 100%;
-      font-size: 14px;
+    .proof-tip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0;
+    }
+    .proof-tip ion-icon {
+      flex: none;
+      font-size: 18px;
     }
   `,
   template: `
@@ -287,13 +293,39 @@ const CANCELLABLE: readonly DeliveryStatus[] = ['Scheduled', 'ToPickup', 'Incide
                   }
 
                   <div class="stack">
-                    <label class="strong" for="proof">Comprovante (opcional)</label>
+                    <span class="strong">Comprovante (opcional)</span>
+                    <p class="notice small proof-tip" role="note">
+                      <ion-icon name="camera-outline" aria-hidden="true" />
+                      Recomendamos tirar uma foto da {{ next.type === 'Pickup' ? 'coleta' : 'entrega' }} como comprovante.
+                    </p>
                     <div class="file-row">
+                      <button class="btn btn--ghost btn--sm" type="button" [disabled]="busy()" (click)="camera.click()">
+                        <ion-icon name="camera-outline" aria-hidden="true" />
+                        Tirar foto
+                      </button>
+                      <button class="btn btn--ghost btn--sm" type="button" [disabled]="busy()" (click)="picker.click()">
+                        <ion-icon name="attach-outline" aria-hidden="true" />
+                        Escolher arquivo
+                      </button>
                       <input
-                        id="proof"
+                        #camera
+                        class="sr-only"
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        tabindex="-1"
+                        aria-label="Tirar foto do comprovante"
+                        (click)="clearPicked($event)"
+                        (change)="onProof($event)"
+                      />
+                      <input
+                        #picker
+                        class="sr-only"
                         type="file"
                         accept="image/jpeg,image/png,application/pdf"
-                        [disabled]="busy()"
+                        tabindex="-1"
+                        aria-label="Escolher arquivo do comprovante"
+                        (click)="clearPicked($event)"
                         (change)="onProof($event)"
                       />
                     </div>
@@ -559,6 +591,10 @@ export class DeliveryRoutePage {
     } finally {
       this.locating.set(false);
     }
+  }
+
+  protected clearPicked(event: Event): void {
+    (event.target as HTMLInputElement).value = '';
   }
 
   protected onProof(event: Event): void {

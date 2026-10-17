@@ -84,15 +84,15 @@ const BRAZIL_CENTER: [number, number] = [-14.2, -51.9];
       height: 38px;
       border-radius: 50%;
       background: #fff;
-      border: 3px solid #1769e0;
+      border: 3px solid #d7141a;
       box-shadow:
-        0 0 0 6px rgb(23 105 224 / 22%),
+        0 0 0 6px rgb(215 20 26 / 22%),
         0 2px 6px rgb(0 0 0 / 35%);
     }
     .map-driver svg {
       width: 22px;
       height: 22px;
-      fill: #1769e0;
+      fill: #d7141a;
     }
     .map-pin--approx {
       border-radius: 50%;

@@ -7,7 +7,9 @@
 
 .shell {
   position: relative;
-  min-height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 22px;
@@ -172,6 +174,23 @@
 /* ---------- Form panel ---------- */
 .shell__panel {
   animation: rise 0.7s 0.15s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@media (max-width: 899px) {
+  .shell--compact {
+    justify-content: center;
+    gap: 14px;
+    padding: 16px 16px 20px;
+  }
+  .shell--compact .shell__pitch {
+    gap: 8px;
+  }
+  .shell--compact .shell__route {
+    display: none;
+  }
+  .shell--compact .shell__title {
+    font-size: clamp(26px, 8vw, 34px);
+  }
 }
 
 @media (min-width: 900px) {

@@ -30,6 +30,45 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
     UtcPipe,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    .terms {
+      padding: 0;
+    }
+    .terms__toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      padding: 16px;
+      border: 0;
+      background: none;
+      font: inherit;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+    }
+    .terms__count {
+      display: block;
+    }
+    .terms__chevron {
+      flex: none;
+      font-size: 20px;
+      transition: transform 0.2s ease;
+    }
+    .terms__chevron--open {
+      transform: rotate(180deg);
+    }
+    .terms__body {
+      padding: 0 16px 16px;
+      border-top: 1.5px dashed var(--line);
+      padding-top: 14px;
+    }
+    .terms__item + .terms__item {
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+  `,
   template: `
     <ion-content [fullscreen]="true">
       <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
@@ -49,26 +88,45 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
           </div>
         }
 
-        <section class="stack">
-          <div class="section-head">
-            <h2>Termos aceitos</h2>
-          </div>
-          <app-problem-alert [error]="request.error()" />
-          @if (request.loading() && consents().length === 0) {
-            <div class="skeleton"></div>
-          }
-          @for (consent of consents(); track consent.termDocumentId) {
-            <div class="card row row--between">
-              <div class="grow">
-                <p class="strong">{{ termLabel[consent.type] }}</p>
-                <p class="muted small">Aceito em {{ consent.acceptedAt | utc | date: 'dd/MM/yyyy HH:mm' }}</p>
-              </div>
-              <span class="chip chip--outline">v{{ consent.version }}</span>
+        <section class="card terms">
+          <button
+            class="terms__toggle"
+            type="button"
+            [attr.aria-expanded]="termsOpen()"
+            aria-controls="accepted-terms"
+            (click)="toggleTerms()"
+          >
+            <span class="row">
+              <ion-icon name="document-text-outline" aria-hidden="true" />
+              <span>
+                <strong class="strong">Termos aceitos</strong>
+                <span class="muted small terms__count">{{ termsSummary() }}</span>
+              </span>
+            </span>
+            <ion-icon class="terms__chevron" [class.terms__chevron--open]="termsOpen()" name="chevron-down-outline" aria-hidden="true" />
+          </button>
+
+          @if (termsOpen()) {
+            <div id="accepted-terms" class="stack terms__body">
+              <app-problem-alert [error]="request.error()" />
+              @if (request.loading() && consents().length === 0) {
+                <div class="skeleton"></div>
+              }
+              @for (consent of consents(); track consent.termDocumentId) {
+                <div class="row row--between terms__item">
+                  <div class="grow">
+                    <p class="strong">{{ termLabel[consent.type] }}</p>
+                    <p class="muted small">Aceito em {{ consent.acceptedAt | utc | date: 'dd/MM/yyyy HH:mm' }}</p>
+                  </div>
+                  <span class="chip chip--outline">v{{ consent.version }}</span>
+                </div>
+              } @empty {
+                @if (!request.loading()) {
+                  <p class="muted">Nenhum termo aceito ainda.</p>
+                }
+              }
+              <a class="link-btn" routerLink="/terms">Ler os termos</a>
             </div>
-          } @empty {
-            @if (!request.loading()) {
-              <p class="muted">Nenhum termo aceito ainda.</p>
-            }
           }
         </section>
 
@@ -127,6 +185,14 @@ export class AccountPage {
   protected readonly consents = signal<Consent[]>([]);
   protected readonly pending = signal<Term[]>([]);
   protected readonly signingOut = signal(false);
+  protected readonly termsOpen = signal(false);
+  protected readonly termsSummary = computed(() => {
+    const total = this.consents().length;
+    if (this.request.loading() && total === 0) {
+      return 'Carregando...';
+    }
+    return total === 1 ? '1 termo aceito' : `${total} termos aceitos`;
+  });
   protected readonly isDriver = computed(() => this.session.role() === 'Driver');
 
   protected roleLabel(): string {
@@ -136,6 +202,10 @@ export class AccountPage {
 
   ionViewWillEnter(): void {
     void this.load();
+  }
+
+  protected toggleTerms(): void {
+    this.termsOpen.update((open) => !open);
   }
 
   protected async refresh(event: Event): Promise<void> {

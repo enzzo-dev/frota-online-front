@@ -3,7 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { Poller } from '../util/poller';
 import { NotificationsService } from './notifications.service';
 
-const BADGE_POLL_MS = 30_000;
+const BADGE_POLL_MS = 120_000;
 
 /** The number on the bell. Polled while a signed-in shell is on screen; the inbox screen refreshes it too. */
 @Injectable({ providedIn: 'root' })

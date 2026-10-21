@@ -137,6 +137,9 @@ export interface DriverDeliverySummary {
   completedStops: number;
   /** Payment of the freight, or null when none was started. Absent on API versions that predate the field. */
   payment?: PaymentStatus | null;
+  /** Absent on API versions that predate the signatures. */
+  driverSigned?: boolean;
+  customerSigned?: boolean;
   createdAt: string;
 }
 

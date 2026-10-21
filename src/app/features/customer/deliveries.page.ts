@@ -1,7 +1,7 @@
 import { CurrencyPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { IonContent, IonRefresher, IonRefresherContent } from '@ionic/angular';
+import { IonContent, IonIcon, IonRefresher, IonRefresherContent } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { CustomerDeliveriesService } from '../../core/api/customer-deliveries.service';
 import { CustomerDeliverySummary, DeliveryStatus } from '../../core/models';
@@ -25,6 +25,7 @@ const FINISHED: readonly DeliveryStatus[] = ['Delivered', 'Cancelled'];
     CurrencyPipe,
     RouterLink,
     IonContent,
+    IonIcon,
     IonRefresher,
     IonRefresherContent,
     EmptyStateComponent,
@@ -68,14 +69,17 @@ const FINISHED: readonly DeliveryStatus[] = ['Delivered', 'Cancelled'];
                   {{ vehicleLabel[delivery.vehicleType] }} · {{ delivery.vehicleModel }} ·
                   <span class="mono">{{ delivery.vehiclePlate }}</span>
                 </p>
-                <div
-                  class="progress"
-                  role="progressbar"
-                  [attr.aria-valuenow]="delivery.completedStops"
-                  aria-valuemin="0"
-                  [attr.aria-valuemax]="delivery.totalStops"
-                >
-                  <span [style.width.%]="percent(delivery)"></span>
+                <div class="progress-track">
+                  <div
+                    class="progress"
+                    role="progressbar"
+                    [attr.aria-valuenow]="delivery.completedStops"
+                    aria-valuemin="0"
+                    [attr.aria-valuemax]="delivery.totalStops"
+                  >
+                    <span [style.width.%]="percent(delivery)"></span>
+                  </div>
+                  <ion-icon class="progress-track__vehicle" src="icons/bus.svg" aria-hidden="true" [style.left.%]="percent(delivery)" />
                 </div>
                 <div class="row row--between">
                   <p class="small">{{ delivery.completedStops }} de {{ delivery.totalStops }} paradas</p>

@@ -73,8 +73,16 @@ function localInputValue(date: Date): string {
     <ion-content>
       <div class="page page--wide page--with-bar">
         <nav class="stepper" aria-label="Etapas do pedido">
-          <div class="progress" role="progressbar" aria-valuemin="1" [attr.aria-valuemax]="steps.length" [attr.aria-valuenow]="step() + 1">
-            <span [style.width.%]="((step() + 1) / steps.length) * 100"></span>
+          <div class="stepper__track">
+            <div class="progress" role="progressbar" aria-valuemin="1" [attr.aria-valuemax]="steps.length" [attr.aria-valuenow]="step() + 1">
+              <span [style.width.%]="((step() + 1) / steps.length) * 100"></span>
+            </div>
+            <ion-icon
+              class="stepper__vehicle"
+              src="icons/bus.svg"
+              aria-hidden="true"
+              [style.left.%]="(step() / (steps.length - 1)) * 100"
+            />
           </div>
           <ol class="stepper__list">
             @for (item of steps; track item.label; let i = $index) {

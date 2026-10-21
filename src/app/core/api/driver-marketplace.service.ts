@@ -14,6 +14,7 @@ import {
   RouteMap,
   RouteView,
   SubmitProposalRequest,
+  UpdateLocationRequest,
 } from '../models';
 
 /** What an approved driver does: browse freights, bid, and run the deliveries they won. */
@@ -53,6 +54,10 @@ export class DriverMarketplaceService {
   /** Exact pins and path of a delivery the driver won. */
   routeMap(deliveryId: string): Observable<RouteMap> {
     return this.api.get<RouteMap>(`/driver/deliveries/${deliveryId}/map`);
+  }
+
+  sendLocation(deliveryId: string, request: UpdateLocationRequest): Observable<void> {
+    return this.api.put<void>(`/driver/deliveries/${deliveryId}/location`, request);
   }
 
   start(deliveryId: string): Observable<DeliveryProgress> {

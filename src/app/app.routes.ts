@@ -1,10 +1,9 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard, homeRedirectGuard, roleGuard } from './core/auth/guards';
+import { authGuard, homeRedirectGuard, roleGuard } from './core/auth/guards';
 
 export const routes: Routes = [
   {
     path: 'auth',
-    canActivate: [guestGuard],
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES),
   },
   {

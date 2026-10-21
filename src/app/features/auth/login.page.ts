@@ -30,11 +30,7 @@ import { notBlank } from '../../shared/forms/validators';
   styleUrl: './auth.styles.scss',
   template: `
     <ion-content [fullscreen]="true">
-       <app-auth-shell
-        title="O motorista define o preço. Aqui o frete anda."
-        lede="Entre para pedir um frete ou para carregar um."
-      >
-
+      <app-auth-shell title="Aqui o frete anda." [compact]="true">
         <form class="auth__form stack" [formGroup]="form" (ngSubmit)="submit()" novalidate>
           @if (accountDeleted) {
             <div class="notice" role="status">Sua conta foi excluída. Você pode criar uma nova quando quiser.</div>
@@ -45,7 +41,6 @@ import { notBlank } from '../../shared/forms/validators';
 
           <div class="auth__head">
             <h2>Entrar</h2>
-            <p>Use o e-mail e a senha da sua conta.</p>
           </div>
 
           <div class="auth__fields">
@@ -72,6 +67,7 @@ import { notBlank } from '../../shared/forms/validators';
           >
             <ion-input-password-toggle slot="end" />
           </ion-input>
+          <a class="link-btn auth__forgot" routerLink="/auth/forgot-password">Esqueci minha senha</a>
           </div>
 
           <app-problem-alert [error]="request.error()" />

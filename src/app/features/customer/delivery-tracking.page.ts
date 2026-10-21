@@ -1,12 +1,12 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { IonContent, IonRefresher, IonRefresherContent } from '@ionic/angular';
+import { IonContent, IonIcon, IonRefresher, IonRefresherContent } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { CustomerDeliveriesService } from '../../core/api/customer-deliveries.service';
 import { FreightsService } from '../../core/api/freights.service';
 import { ApiError } from '../../core/http/api-error';
-import { CustomerDeliveryDetail, RouteMap } from '../../core/models';
+import { CustomerDeliveryDetail, DriverLocation, RouteMap } from '../../core/models';
 import { ConfirmService } from '../../core/ui/confirm.service';
 import { DELIVERY_STATUS_VIEW, PAYMENT_STATUS_VIEW, VEHICLE_TYPE_LABEL } from '../../core/ui/labels';
 import { completeRefresh } from '../../core/ui/refresher';
@@ -23,8 +23,8 @@ import { StopsRouteComponent } from '../../shared/components/stops-route.compone
 import { UtcPipe } from '../../shared/pipes/utc.pipe';
 import { DeliveryPaymentComponent } from './delivery-payment.component';
 
-/** The API has no push or websocket yet, so a running delivery is polled every few seconds. */
-const TRACK_POLL_MS = 5_000;
+/** The API has no push or websocket yet, so a delivery under way is polled every few seconds. */
+const TRACK_POLL_MS = 15_000;
 
 /** One delivery as its customer follows it: progress, stops, timeline, payment, and cancel before pickup. */
 @Component({
@@ -33,6 +33,7 @@ const TRACK_POLL_MS = 5_000;
     CurrencyPipe,
     DatePipe,
     IonContent,
+    IonIcon,
     IonRefresher,
     IonRefresherContent,
     DeliveryPaymentComponent,
@@ -98,14 +99,17 @@ const TRACK_POLL_MS = 5_000;
             <p class="muted small">
               {{ vehicleLabel[d.vehicleType] }} · {{ d.vehicleModel }} · <span class="mono">{{ d.vehiclePlate }}</span>
             </p>
-            <div
-              class="progress"
-              role="progressbar"
-              [attr.aria-valuenow]="completed()"
-              aria-valuemin="0"
-              [attr.aria-valuemax]="d.stops.length"
-            >
-              <span [style.width.%]="percent()"></span>
+            <div class="progress-track">
+              <div
+                class="progress"
+                role="progressbar"
+                [attr.aria-valuenow]="completed()"
+                aria-valuemin="0"
+                [attr.aria-valuemax]="d.stops.length"
+              >
+                <span [style.width.%]="percent()"></span>
+              </div>
+              <ion-icon class="progress-track__vehicle" src="icons/bus.svg" aria-hidden="true" [style.left.%]="percent()" />
             </div>
             <div class="row row--between row--wrap">
               <p class="small">{{ completed() }} de {{ d.stops.length }} paradas concluídas</p>
@@ -119,7 +123,12 @@ const TRACK_POLL_MS = 5_000;
             <div class="stack stack--lg">
               <section class="stack">
                 <h2>Paradas</h2>
-                <app-route-map-card [route]="route()" [loading]="routeLoading()" [error]="routeError()" />
+                <app-route-map-card
+                  [route]="route()"
+                  [loading]="routeLoading()"
+                  [error]="routeError()"
+                  [driver]="driverLocation()"
+                />
                 <app-stops-route [stops]="stops()" />
               </section>
             </div>
@@ -208,6 +217,8 @@ export class DeliveryTrackingPage {
   protected readonly route = signal<RouteMap | null>(null);
   protected readonly routeLoading = signal(false);
   protected readonly routeError = signal<ApiError | null>(null);
+  /** Where the driver is, from the light `/status`: it moves the pin without fetching the full delivery. */
+  protected readonly driverLocation = signal<DriverLocation | null>(null);
 
   protected readonly stops = computed(() => fromFreightStops(this.delivery()?.stops ?? []));
   protected readonly completed = computed(() => this.delivery()?.stops.filter((s) => s.completedAt !== null).length ?? 0);
@@ -219,6 +230,10 @@ export class DeliveryTrackingPage {
     const status = this.delivery()?.status;
     return status !== undefined && status !== 'Delivered' && status !== 'Cancelled';
   });
+  protected readonly underway = computed(() => {
+    const status = this.delivery()?.status;
+    return status === 'ToPickup' || status === 'PickedUp' || status === 'InTransit';
+  });
   /** Delivered and not paid yet: the customer can pay by Pix in the app. */
   protected readonly payable = computed(() => {
     const d = this.delivery();
@@ -229,12 +244,10 @@ export class DeliveryTrackingPage {
     return status === 'Scheduled' || status === 'ToPickup';
   });
 
-  private readonly poller = new Poller(async () => {
-    // Keeps going after delivery while a payment is waiting, so the payment shows up by itself.
-    if (this.running() || (this.awaitingPayment() && this.payable())) {
-      await this.fetch();
-    }
-  }, TRACK_POLL_MS);
+  /** The `version` of the last status seen. The full delivery is fetched again only when it changes. */
+  private lastVersion: string | null = null;
+
+  private readonly poller = new Poller(() => this.checkStatus(), TRACK_POLL_MS);
   private routeRequested = false;
 
   ionViewWillEnter(): void {
@@ -279,8 +292,43 @@ export class DeliveryTrackingPage {
     await this.load.run(() => this.fetch());
   }
 
+  /**
+   * The live check, every few seconds: only the light `/status`. The full delivery is fetched when its `version`
+   * changed. It does nothing once the delivery is over and its payment is settled, and the poller itself does not
+   * run while the app is in the background (it checks again as soon as the app comes back).
+   */
+  private async checkStatus(): Promise<void> {
+    if (!this.shouldPoll()) {
+      return;
+    }
+    const status = await firstValueFrom(this.api.status(this.deliveryId));
+    this.driverLocation.set(status.driverLocation);
+    if (status.version !== this.lastVersion) {
+      // The change that ends the delivery (or settles its payment) also lands here: that is the last full fetch.
+      await this.fetchDetail(status.version);
+    }
+  }
+
+  /** Delivery still running, or delivered with a payment that is waiting for the provider. */
+  private shouldPoll(): boolean {
+    const d = this.delivery();
+    if (d === null) {
+      return false;
+    }
+    return this.underway() || (d.status === 'Delivered' && (d.payment === 'Pending' || (this.awaitingPayment() && d.payment !== 'Paid')));
+  }
+
+  /** First load, pull to refresh and after an action: always the full delivery. */
   private async fetch(): Promise<void> {
+    // The version is read first, so a change that lands while the detail loads is caught by the next check.
+    const status = await firstValueFrom(this.api.status(this.deliveryId));
+    this.driverLocation.set(status.driverLocation);
+    await this.fetchDetail(status.version);
+  }
+
+  private async fetchDetail(version: string): Promise<void> {
     const detail = await firstValueFrom(this.api.get(this.deliveryId));
+    this.lastVersion = version;
     this.delivery.set(detail);
     if (!this.routeRequested) {
       this.routeRequested = true;

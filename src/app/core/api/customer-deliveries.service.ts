@@ -5,6 +5,7 @@ import {
   CardPayment,
   CustomerDeliveryDetail,
   CustomerDeliverySummary,
+  DeliveryStatusResponse,
   PayWithCardRequest,
   PixPayment,
   WalletPayment,
@@ -21,6 +22,11 @@ export class CustomerDeliveriesService {
 
   get(deliveryId: string): Observable<CustomerDeliveryDetail> {
     return this.api.get<CustomerDeliveryDetail>(`/deliveries/${deliveryId}`);
+  }
+
+  /** A few fields and a `version`: poll this, and load the full delivery only when the version changes. */
+  status(deliveryId: string): Observable<DeliveryStatusResponse> {
+    return this.api.get<DeliveryStatusResponse>(`/deliveries/${deliveryId}/status`);
   }
 
   /** Only before pickup (Scheduled or ToPickup). */

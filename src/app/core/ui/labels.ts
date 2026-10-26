@@ -21,6 +21,7 @@ export interface StatusView {
 }
 
 export const VEHICLE_TYPE_LABEL: Readonly<Record<VehicleType, string>> = {
+  Motorcycle: 'Moto',
   Fiorino: 'Fiorino',
   Van: 'Van',
   Pickup: 'Picape',

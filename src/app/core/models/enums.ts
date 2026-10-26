@@ -6,7 +6,7 @@ export type UserRole = (typeof USER_ROLES)[number];
 export const DRIVER_STATUSES = ['Draft', 'PendingReview', 'Approved', 'Rejected', 'Removed'] as const;
 export type DriverStatus = (typeof DRIVER_STATUSES)[number];
 
-export const VEHICLE_TYPES = ['Fiorino', 'Van', 'Pickup', 'Truck34', 'Truck', 'Trailer'] as const;
+export const VEHICLE_TYPES = ['Motorcycle', 'Fiorino', 'Van', 'Pickup', 'Truck34', 'Truck', 'Trailer'] as const;
 export type VehicleType = (typeof VEHICLE_TYPES)[number];
 
 export const STOP_TYPES = ['Pickup', 'Delivery'] as const;

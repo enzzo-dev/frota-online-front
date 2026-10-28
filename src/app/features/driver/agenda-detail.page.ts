@@ -180,11 +180,11 @@ import { StopsRouteComponent } from '../../shared/components/stops-route.compone
               </div>
               <div>
                 <small>Taxa</small>
-                <strong>{{ fee | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</strong>
+                <strong>{{ d.platformFee ?? fee | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</strong>
               </div>
               <div>
                 <small>Você recebe</small>
-                <strong>{{ d.agreedPrice - fee | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</strong>
+                <strong>{{ d.driverNet ?? d.agreedPrice - fee | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</strong>
               </div>
             </div>
           </section>

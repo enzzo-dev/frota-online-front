@@ -159,6 +159,8 @@ export interface DriverDeliverySummary {
   vehiclePlate?: string | null;
   vehicleModel?: string | null;
   customerName?: string | null;
+  platformFee?: number | null;
+  driverNet?: number | null;
   createdAt: string;
 }
 

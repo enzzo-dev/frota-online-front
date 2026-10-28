@@ -7,7 +7,6 @@ const DRIVER_TABS: readonly TabItem[] = [
   { tab: 'freights', label: 'Fretes', icon: 'cube-outline' },
   { tab: 'proposals', label: 'Propostas', icon: 'pricetag-outline' },
   { tab: 'deliveries', label: 'Corridas', icon: 'map-outline' },
-  { tab: 'profile', label: 'Cadastro', icon: 'id-card-outline' },
   { tab: 'account', label: 'Conta', icon: 'person-circle-outline' },
 ];
 
@@ -38,10 +37,6 @@ export const DRIVER_ROUTES: Routes = [
         loadComponent: () => import('./deliveries.page').then((m) => m.DeliveriesPage),
       },
       {
-        path: 'profile',
-        loadComponent: () => import('./profile/profile.page').then((m) => m.DriverProfilePage),
-      },
-      {
         path: 'account',
         loadComponent: () => import('../account/account.page').then((m) => m.AccountPage),
       },
@@ -53,6 +48,10 @@ export const DRIVER_ROUTES: Routes = [
     path: 'fees',
     canActivate: [driverApprovedGuard],
     loadComponent: () => import('./fees.page').then((m) => m.FeesPage),
+  },
+  {
+    path: 'profile',
+    loadComponent: () => import('./profile/profile.page').then((m) => m.DriverProfilePage),
   },
   {
     path: 'billing',

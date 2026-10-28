@@ -7,11 +7,13 @@ import { firstValueFrom } from 'rxjs';
 import { DriverMarketplaceService } from '../../core/api/driver-marketplace.service';
 import { DriverService } from '../../core/api/driver.service';
 import { SessionService } from '../../core/auth/session.service';
-import { DriverDeliverySummary, DriverLocation, Vehicle } from '../../core/models';
+import { DriverDeliverySummary, DriverLocation, OpenFreight, Proposal, Vehicle } from '../../core/models';
 import { DELIVERY_STATUS_VIEW, VEHICLE_TYPE_LABEL } from '../../core/ui/labels';
 import { completeRefresh } from '../../core/ui/refresher';
 import { createRequestState } from '../../core/ui/request-state';
-import { sameLocalDay } from '../../core/util/dates';
+import { sameLocalDay, toUtcMillis } from '../../core/util/dates';
+import { formatDistance } from '../../core/util/route-format';
+import { CountdownComponent } from '../../shared/components/countdown.component';
 import { MapViewComponent } from '../../shared/components/map-view.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
 import { StatusChipComponent } from '../../shared/components/status-chip.component';
@@ -27,6 +29,7 @@ const UNDERWAY = ['ToPickup', 'PickedUp', 'InTransit', 'Incident'] as const;
     IonIcon,
     IonRefresher,
     IonRefresherContent,
+    CountdownComponent,
     MapViewComponent,
     ProblemAlertComponent,
     StatusChipComponent,
@@ -133,6 +136,41 @@ const UNDERWAY = ['ToPickup', 'PickedUp', 'InTransit', 'Incident'] as const;
       font: 700 1.15rem/1.1 var(--font-display);
       white-space: nowrap;
     }
+    .proposals {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .proposals__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .proposals__head h2 {
+      margin: 0;
+      font: 700 1.05rem/1.1 var(--font-display);
+    }
+    .proposal {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1.5px solid var(--line, #e4e4e7);
+      color: inherit;
+      text-decoration: none;
+    }
+    .proposal__price {
+      font: 700 1.2rem/1.1 var(--font-display);
+    }
+    .proposal__title {
+      font: 700 1rem/1.15 var(--font-display);
+    }
+    .proposal__meta {
+      font-size: 0.8rem;
+      color: var(--muted, #6b6b70);
+    }
     .stat__label {
       font-size: 0.75rem;
       color: var(--muted, #6b6b70);
@@ -198,6 +236,47 @@ const UNDERWAY = ['ToPickup', 'PickedUp', 'InTransit', 'Incident'] as const;
             <span class="stat__label">Concluídas</span>
           </div>
         </div>
+
+        @if (openFreights().length > 0) {
+          <div class="proposals">
+            <div class="proposals__head">
+              <h2>Fretes esperando proposta</h2>
+              <a class="link-btn" routerLink="/driver/freights">Ver todos</a>
+            </div>
+            @for (freight of openFreights(); track freight.id) {
+              <a class="proposal" routerLink="/driver/freights">
+                <div>
+                  <div class="proposal__title">{{ freight.cargoDescription }}</div>
+                  <div class="proposal__meta">
+                    {{ freight.cargoWeightKg }} kg
+                    @if (distance(freight); as km) {
+                      · {{ km }}
+                    }
+                  </div>
+                </div>
+                <span class="proposal__meta">fecha em <app-countdown [until]="freight.proposalDeadline" /></span>
+              </a>
+            }
+          </div>
+        }
+
+        @if (pending().length > 0) {
+          <div class="proposals">
+            <div class="proposals__head">
+              <h2>Propostas pendentes</h2>
+              <a class="link-btn" routerLink="/driver/proposals">Ver todas</a>
+            </div>
+            @for (proposal of pending(); track proposal.id) {
+              <a class="proposal" routerLink="/driver/proposals">
+                <div>
+                  <div class="proposal__price">{{ proposal.price | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</div>
+                  <div class="proposal__meta">Frete #{{ shortId(proposal.freightRequestId) }}</div>
+                </div>
+                <span class="proposal__meta">expira em <app-countdown [until]="proposal.expiresAt" /></span>
+              </a>
+            }
+          </div>
+        }
       </section>
     </ion-content>
   `,
@@ -214,6 +293,20 @@ export class DriverHomePage {
 
   private readonly deliveries = signal<readonly DriverDeliverySummary[]>([]);
   private readonly vehicles = signal<readonly Vehicle[]>([]);
+  private readonly proposals = signal<readonly Proposal[]>([]);
+  private readonly open = signal<readonly OpenFreight[]>([]);
+
+  protected readonly openFreights = computed(() =>
+    [...this.open()]
+      .sort((a, b) => (toUtcMillis(a.proposalDeadline) ?? 0) - (toUtcMillis(b.proposalDeadline) ?? 0))
+      .slice(0, 3),
+  );
+
+  protected readonly pending = computed(() =>
+    this.proposals()
+      .filter((proposal) => proposal.status === 'Pending')
+      .slice(0, 3),
+  );
 
   protected readonly firstName = computed(() => (this.session.user()?.fullName ?? '').split(' ')[0] || 'motorista');
   protected readonly underway = computed(
@@ -257,6 +350,14 @@ export class DriverHomePage {
     }
   }
 
+  protected distance(freight: OpenFreight): string {
+    return formatDistance(freight.routeDistanceMeters) ?? '';
+  }
+
+  protected shortId(id: string): string {
+    return id.slice(0, 8);
+  }
+
   private async reload(): Promise<void> {
     const list = await this.load.run(() => firstValueFrom(this.marketplace.deliveries()));
     if (list) {
@@ -266,6 +367,16 @@ export class DriverHomePage {
       this.vehicles.set(await firstValueFrom(this.driver.vehicles()));
     } catch {
       this.vehicles.set([]);
+    }
+    try {
+      this.open.set(await firstValueFrom(this.marketplace.openFreights()));
+    } catch {
+      this.open.set([]);
+    }
+    try {
+      this.proposals.set(await firstValueFrom(this.marketplace.proposals()));
+    } catch {
+      this.proposals.set([]);
     }
   }
 }

@@ -5,7 +5,7 @@ import type { TabItem } from '../shell/tabs-shell.component';
 const DRIVER_TABS: readonly TabItem[] = [
   { tab: 'home', label: 'Início', icon: 'home-outline' },
   { tab: 'freights', label: 'Fretes', icon: 'cube-outline' },
-  { tab: 'proposals', label: 'Propostas', icon: 'pricetag-outline' },
+  { tab: 'agenda', label: 'Agenda', icon: 'calendar-outline' },
   { tab: 'deliveries', label: 'Corridas', icon: 'map-outline' },
   { tab: 'account', label: 'Conta', icon: 'person-circle-outline' },
 ];
@@ -27,9 +27,9 @@ export const DRIVER_ROUTES: Routes = [
         loadComponent: () => import('./freight-board.page').then((m) => m.FreightBoardPage),
       },
       {
-        path: 'proposals',
+        path: 'agenda',
         canActivate: [driverApprovedGuard],
-        loadComponent: () => import('./proposals.page').then((m) => m.ProposalsPage),
+        loadComponent: () => import('./agenda.page').then((m) => m.AgendaPage),
       },
       {
         path: 'deliveries',
@@ -44,6 +44,11 @@ export const DRIVER_ROUTES: Routes = [
     ],
   },
   // Pushed over the tabs, full screen, with a back button.
+  {
+    path: 'proposals',
+    canActivate: [driverApprovedGuard],
+    loadComponent: () => import('./proposals.page').then((m) => m.ProposalsPage),
+  },
   {
     path: 'fees',
     canActivate: [driverApprovedGuard],

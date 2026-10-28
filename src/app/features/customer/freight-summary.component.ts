@@ -8,6 +8,8 @@ export interface FreightSummary {
   readonly cargo: string;
   readonly weightText: string;
   readonly vehicle: string;
+  readonly driverNote?: string;
+  readonly hasPhoto?: boolean;
   readonly whenText: string;
   readonly windowText: string;
 }
@@ -48,6 +50,14 @@ export type SummarySection = 0 | 1 | 2;
         <dd>{{ summary().weightText || '—' }}</dd>
         <dt>Veículo</dt>
         <dd>{{ summary().vehicle }}</dd>
+        @if (summary().driverNote) {
+          <dt>Observação</dt>
+          <dd>{{ summary().driverNote }}</dd>
+        }
+        @if (summary().hasPhoto) {
+          <dt>Foto</dt>
+          <dd>Anexada</dd>
+        }
       </dl>
     </section>
 

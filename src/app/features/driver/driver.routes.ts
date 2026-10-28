@@ -3,6 +3,7 @@ import { driverApprovedGuard } from '../../core/api/driver-approved.guard';
 import type { TabItem } from '../shell/tabs-shell.component';
 
 const DRIVER_TABS: readonly TabItem[] = [
+  { tab: 'home', label: 'Início', icon: 'home-outline' },
   { tab: 'freights', label: 'Fretes', icon: 'cube-outline' },
   { tab: 'proposals', label: 'Propostas', icon: 'pricetag-outline' },
   { tab: 'deliveries', label: 'Corridas', icon: 'map-outline' },
@@ -16,6 +17,11 @@ export const DRIVER_ROUTES: Routes = [
     loadComponent: () => import('../shell/tabs-shell.component').then((m) => m.TabsShellComponent),
     data: { tabs: DRIVER_TABS },
     children: [
+      {
+        path: 'home',
+        canActivate: [driverApprovedGuard],
+        loadComponent: () => import('./home.page').then((m) => m.DriverHomePage),
+      },
       {
         path: 'freights',
         canActivate: [driverApprovedGuard],
@@ -39,7 +45,7 @@ export const DRIVER_ROUTES: Routes = [
         path: 'account',
         loadComponent: () => import('../account/account.page').then((m) => m.AccountPage),
       },
-      { path: '', pathMatch: 'full', redirectTo: 'freights' },
+      { path: '', pathMatch: 'full', redirectTo: 'home' },
     ],
   },
   // Pushed over the tabs, full screen, with a back button.

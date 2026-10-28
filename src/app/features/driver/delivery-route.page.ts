@@ -35,6 +35,7 @@ import { ToastService } from '../../core/ui/toast.service';
 import { googleMapsNavUrl, wazeNavUrl } from '../../core/util/address-format';
 import { StopView, fromRouteStops } from '../../core/util/stop-views';
 import { DeliverySignatures, DeliverySignaturesSheetComponent } from './delivery-signatures-sheet.component';
+import { CargoPhotoComponent } from '../../shared/components/cargo-photo.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { PageBarComponent } from '../../shared/components/page-bar.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
@@ -73,6 +74,7 @@ const CANCELLABLE: readonly DeliveryStatus[] = ['Scheduled', 'ToPickup', 'Incide
     IonRefresherContent,
     IonSpinner,
     IonTextarea,
+    CargoPhotoComponent,
     EmptyStateComponent,
     PageBarComponent,
     ProblemAlertComponent,
@@ -139,6 +141,12 @@ const CANCELLABLE: readonly DeliveryStatus[] = ['Scheduled', 'ToPickup', 'Incide
               }
             </div>
             <p class="muted small">{{ r.cargoWeightKg | number: '1.0-2' : 'pt-BR' }} kg</p>
+            @if (r.driverNote; as note) {
+              <p class="small">{{ note }}</p>
+            }
+            @if (r.hasCargoPhoto) {
+              <app-cargo-photo [freightId]="r.freightRequestId" />
+            }
             @if (reporter.denied()) {
               <p class="small" role="alert">
                 Sem a permissão de localização o cliente não vê onde você está. Libere nas configurações do aparelho.

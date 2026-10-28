@@ -20,3 +20,12 @@ export function toUtcMillis(value: string | null | undefined): number | null {
 export function localInputToUtcIso(localValue: string): string {
   return new Date(localValue).toISOString();
 }
+
+export function sameLocalDay(value: string, reference: Date): boolean {
+  const date = parseUtc(value);
+  return (
+    date.getFullYear() === reference.getFullYear() &&
+    date.getMonth() === reference.getMonth() &&
+    date.getDate() === reference.getDate()
+  );
+}

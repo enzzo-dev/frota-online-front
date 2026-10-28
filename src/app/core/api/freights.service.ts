@@ -45,6 +45,14 @@ export class FreightsService {
     return this.api.post<RouteMap>('/freights/route-preview', { addressIds });
   }
 
+  uploadCargoPhoto(freightId: string, image: string): Observable<void> {
+    return this.api.post<void>(`/freights/${freightId}/cargo-photo`, { image });
+  }
+
+  cargoPhoto(freightId: string): Observable<Blob> {
+    return this.api.getBlob(`/freights/${freightId}/cargo-photo`);
+  }
+
   /** The route of a freight already created; every pin carries its stop type. */
   route(freightId: string): Observable<RouteMap> {
     return this.api.get<RouteMap>(`/freights/${freightId}/route`);

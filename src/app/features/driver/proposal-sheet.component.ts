@@ -16,6 +16,7 @@ import { formatDistance, formatDuration } from '../../core/util/route-format';
 import { CountdownComponent } from '../../shared/components/countdown.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
 import { greaterThan } from '../../shared/forms/validators';
+import { CargoPhotoComponent } from '../../shared/components/cargo-photo.component';
 import { UtcPipe } from '../../shared/pipes/utc.pipe';
 
 
@@ -25,7 +26,7 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
  */
 @Component({
   selector: 'app-proposal-sheet',
-  imports: [CurrencyPipe, DatePipe, DecimalPipe, ReactiveFormsModule, IonContent, IonSpinner, CountdownComponent, ProblemAlertComponent, UtcPipe],
+  imports: [CurrencyPipe, DatePipe, DecimalPipe, ReactiveFormsModule, IonContent, IonSpinner, CargoPhotoComponent, CountdownComponent, ProblemAlertComponent, UtcPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ion-content>
@@ -41,6 +42,12 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
             <span class="slip__clock">fecha em <app-countdown [until]="freight().proposalDeadline" /></span>
           </div>
           <h2 class="slip__cargo">{{ freight().cargoDescription }}</h2>
+          @if (freight().hasCargoPhoto) {
+            <app-cargo-photo [freightId]="freight().id" />
+          }
+          @if (freight().driverNote; as note) {
+            <p class="slip__note">{{ note }}</p>
+          }
 
           <div class="leg">
             <div class="leg__end">
@@ -253,6 +260,11 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
       font: 700 1.3rem/1.15 var(--font-display);
       letter-spacing: -0.02em;
       color: #fff;
+    }
+    .slip__note {
+      margin: 0 0 14px;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.75);
     }
     .leg {
       display: grid;

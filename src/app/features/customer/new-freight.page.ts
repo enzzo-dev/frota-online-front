@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { IonContent, IonFooter, IonIcon, IonInput, IonSpinner } from '@ionic/angular';
+import { IonContent, IonFooter, IonIcon, IonInput, IonSpinner, IonTextarea } from '@ionic/angular';
 import { firstValueFrom } from 'rxjs';
 import { AddressesService } from '../../core/api/addresses.service';
 import { FreightsService } from '../../core/api/freights.service';
@@ -12,6 +12,7 @@ import { createRequestState } from '../../core/ui/request-state';
 import { ToastService } from '../../core/ui/toast.service';
 import { areaLine, streetLine } from '../../core/util/address-format';
 import { localInputToUtcIso } from '../../core/util/dates';
+import { toJpegDataUrl } from '../../core/util/image-file';
 import { parseDecimal } from '../../core/util/normalizers';
 import { StopView } from '../../core/util/stop-views';
 import { PageBarComponent } from '../../shared/components/page-bar.component';
@@ -59,6 +60,7 @@ function localInputValue(date: Date): string {
     IonIcon,
     IonInput,
     IonSpinner,
+    IonTextarea,
     FreightSummaryComponent,
     PageBarComponent,
     ProblemAlertComponent,
@@ -184,6 +186,62 @@ function localInputValue(date: Date): string {
                     </div>
                     <p class="field-hint">Escolha o menor veículo que comporta a carga.</p>
                   </fieldset>
+
+                  <ion-textarea
+                    formControlName="driverNote"
+                    label="Observação para o motorista (opcional)"
+                    labelPlacement="stacked"
+                    fill="outline"
+                    placeholder="Ex.: portão verde, falar com o João"
+                    [counter]="true"
+                    maxlength="300"
+                    [autoGrow]="true"
+                  />
+
+                  <div class="stack">
+                    <span class="strong">Foto da carga (opcional)</span>
+                    <p class="field-hint">Ajuda o motorista a ver o tamanho e o tipo da carga antes de propor.</p>
+                    @if (photoPreview(); as preview) {
+                      <img class="cargo-photo" [src]="preview" alt="Foto da carga escolhida" />
+                    }
+                    <div class="file-row">
+                      <button class="btn btn--ghost btn--sm" type="button" (click)="camera.click()">
+                        <ion-icon name="camera-outline" aria-hidden="true" />
+                        {{ photoPreview() ? 'Tirar outra' : 'Tirar foto' }}
+                      </button>
+                      <button class="btn btn--ghost btn--sm" type="button" (click)="picker.click()">
+                        <ion-icon name="image-outline" aria-hidden="true" />
+                        Escolher da galeria
+                      </button>
+                      @if (photoPreview()) {
+                        <button class="link-btn" type="button" (click)="clearPhoto()">Remover</button>
+                      }
+                      <input
+                        #camera
+                        class="sr-only"
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        tabindex="-1"
+                        aria-label="Tirar foto da carga"
+                        (click)="resetInput($event)"
+                        (change)="onPhoto($event)"
+                      />
+                      <input
+                        #picker
+                        class="sr-only"
+                        type="file"
+                        accept="image/jpeg,image/png"
+                        tabindex="-1"
+                        aria-label="Escolher foto da carga"
+                        (click)="resetInput($event)"
+                        (change)="onPhoto($event)"
+                      />
+                    </div>
+                    @if (photoProblem(); as problem) {
+                      <p class="field-hint">{{ problem }}</p>
+                    }
+                  </div>
                 </form>
               }
 
@@ -314,10 +372,15 @@ export class NewFreightPage {
   protected readonly scheduledAt = signal('');
   protected readonly minScheduled = localInputValue(new Date());
 
+  protected readonly photoPreview = signal<string | null>(null);
+  protected readonly photoProblem = signal<string | null>(null);
+  private photo: string | null = null;
+
   protected readonly cargoForm = this.fb.group({
     cargoDescription: ['', [notBlank, Validators.maxLength(200)]],
     cargoWeightKg: ['', [Validators.required, greaterThan(0)]],
     requiredVehicleType: ['Fiorino' as VehicleType, [Validators.required]],
+    driverNote: ['', [Validators.maxLength(300)]],
   });
 
   protected readonly current = computed(() => STEPS[this.step()] ?? STEPS[0]!);
@@ -382,6 +445,8 @@ export class NewFreightPage {
       cargo: cargo.cargoDescription.trim(),
       weightText: weight ? `${weight.toLocaleString('pt-BR')} kg` : '',
       vehicle: VEHICLE_TYPE_LABEL[cargo.requiredVehicleType],
+      driverNote: cargo.driverNote.trim(),
+      hasPhoto: this.photoPreview() !== null,
       whenText: this.timing() === 'today' ? 'Hoje, o quanto antes' : scheduled ? this.formatWhen(this.scheduledAt()) : 'Agendado (escolha a data)',
       windowText:
         this.timing() === 'today'
@@ -444,6 +509,31 @@ export class NewFreightPage {
     this.scheduledAt.set(typeof value === 'string' ? value : '');
   }
 
+  protected resetInput(event: Event): void {
+    (event.target as HTMLInputElement).value = '';
+  }
+
+  protected async onPhoto(event: Event): Promise<void> {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) {
+      return;
+    }
+    this.photoProblem.set(null);
+    try {
+      const image = await toJpegDataUrl(file);
+      this.photo = image;
+      this.photoPreview.set(image);
+    } catch {
+      this.photoProblem.set('Não foi possível ler essa foto. Tente outra.');
+    }
+  }
+
+  protected clearPhoto(): void {
+    this.photo = null;
+    this.photoPreview.set(null);
+    this.photoProblem.set(null);
+  }
+
   protected onAddressSaved(address: Address): void {
     this.addresses.update((list) => (list.some((item) => item.id === address.id) ? list : [...list, address]));
   }
@@ -493,12 +583,26 @@ export class NewFreightPage {
           cargoWeightKg: parseDecimal(cargo.cargoWeightKg) ?? 0,
           requiredVehicleType: cargo.requiredVehicleType,
           scheduledPickupAt: this.timing() === 'scheduled' ? localInputToUtcIso(this.scheduledAt()) : null,
+          driverNote: cargo.driverNote.trim() || null,
         }),
       ),
     );
     if (freight) {
+      const photo = this.photo;
       this.resetDraft();
-      await this.toast.show('Frete publicado. Agora é só esperar as propostas.');
+      let photoSent = true;
+      if (photo) {
+        try {
+          await firstValueFrom(this.freights.uploadCargoPhoto(freight.id, photo));
+        } catch {
+          photoSent = false;
+        }
+      }
+      await this.toast.show(
+        photoSent
+          ? 'Frete publicado. Agora é só esperar as propostas.'
+          : 'Frete publicado, mas a foto da carga não foi enviada.',
+      );
       await this.router.navigate(['/customer/freights', freight.id], { replaceUrl: true });
     }
   }
@@ -530,7 +634,8 @@ export class NewFreightPage {
     this.step.set(0);
     this.reached.set(0);
     this.tried.set(false);
-    this.cargoForm.reset({ cargoDescription: '', cargoWeightKg: '', requiredVehicleType: 'Fiorino' });
+    this.cargoForm.reset({ cargoDescription: '', cargoWeightKg: '', requiredVehicleType: 'Fiorino', driverNote: '' });
+    this.clearPhoto();
   }
 
   private async loadAddresses(): Promise<void> {

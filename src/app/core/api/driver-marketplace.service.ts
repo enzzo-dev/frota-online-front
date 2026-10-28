@@ -8,6 +8,7 @@ import {
   DeliveryProgress,
   DeliveryRoute,
   DriverDeliverySummary,
+  DriverMetrics,
   OpenFreight,
   PaymentResponse,
   Proposal,
@@ -24,6 +25,21 @@ export class DriverMarketplaceService {
 
   openFreights(): Observable<OpenFreight[]> {
     return this.api.get<OpenFreight[]>('/driver/freights/open');
+  }
+
+  markSeen(freightId: string): Observable<void> {
+    return this.api.post<void>(`/freights/${freightId}/view`);
+  }
+
+  metrics(from?: string, to?: string): Observable<DriverMetrics> {
+    const params: Record<string, string> = {};
+    if (from) {
+      params['from'] = from;
+    }
+    if (to) {
+      params['to'] = to;
+    }
+    return this.api.get<DriverMetrics>('/driver/metrics', params);
   }
 
   submitProposal(freightId: string, request: SubmitProposalRequest): Observable<Proposal> {

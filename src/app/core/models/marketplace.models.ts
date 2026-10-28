@@ -186,3 +186,15 @@ export interface DeliveryRoute {
   completedStops: number;
   stops: RouteStop[];
 }
+
+export interface DriverMetrics {
+  freightsSeen: number;
+  freightsMissed: number;
+  proposalsSent: number;
+  proposalsAccepted: number;
+  proposalsRejected: number;
+  proposalsExpired: number;
+  acceptanceRate: number;
+  deliveriesCompleted: number;
+  deliveriesCancelled: number;
+}

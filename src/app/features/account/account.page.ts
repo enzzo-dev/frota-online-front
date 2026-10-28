@@ -151,6 +151,16 @@ import { UtcPipe } from '../../shared/pipes/utc.pipe';
             </span>
           </a>
 
+          <a class="card card--link row row--between" routerLink="/driver/performance">
+            <span class="row">
+              <ion-icon name="bar-chart-outline" aria-hidden="true" />
+              <span>
+                <strong class="strong">Meu desempenho</strong>
+                <span class="muted small" style="display: block">Fretes vistos, propostas e taxa de aceite</span>
+              </span>
+            </span>
+          </a>
+
           <a class="card card--link row row--between" routerLink="/driver/billing">
             <span class="row">
               <ion-icon name="ribbon-outline" aria-hidden="true" />

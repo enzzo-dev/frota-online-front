@@ -55,6 +55,11 @@ export const DRIVER_ROUTES: Routes = [
     loadComponent: () => import('./proposals.page').then((m) => m.ProposalsPage),
   },
   {
+    path: 'performance',
+    canActivate: [driverApprovedGuard],
+    loadComponent: () => import('./performance.page').then((m) => m.PerformancePage),
+  },
+  {
     path: 'fees',
     canActivate: [driverApprovedGuard],
     loadComponent: () => import('./fees.page').then((m) => m.FeesPage),

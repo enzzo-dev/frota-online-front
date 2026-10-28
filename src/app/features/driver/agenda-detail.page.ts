@@ -44,9 +44,9 @@ import { StopsRouteComponent } from '../../shared/components/stops-route.compone
     .when {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       padding: 20px;
-      border-radius: 24px;
+      border-radius: 26px;
       background: var(--black);
       color: #fff;
     }
@@ -57,80 +57,242 @@ import { StopsRouteComponent } from '../../shared/components/stops-route.compone
       gap: 10px;
     }
     .when__day {
-      font: 700 0.85rem/1 var(--font-mono, monospace);
+      font: 700 0.8rem/1 var(--font-mono, monospace);
       letter-spacing: 0.08em;
       text-transform: uppercase;
       opacity: 0.8;
     }
     .when__time {
-      font: 700 2.4rem/1 var(--font-display);
+      font: 700 2.6rem/1 var(--font-display);
+      letter-spacing: -0.03em;
+    }
+    .when__time small {
+      font-size: 1.3rem;
+      opacity: 0.7;
+    }
+    .when__meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pill {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgb(255 255 255 / 12%);
+      font-size: 0.78rem;
+    }
+    .pill--hot {
+      background: var(--red);
+    }
+    .net {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgb(255 255 255 / 8%);
+    }
+    .net__top {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .net__label {
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+    .net__value {
+      display: block;
+      font: 700 1.9rem/1.05 var(--font-display);
       letter-spacing: -0.02em;
     }
-    .when__count {
-      font-size: 0.9rem;
-      opacity: 0.85;
-    }
-    .when__count strong {
-      color: #fff;
-    }
-    .money {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 6px;
-    }
-    .money div {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      background: rgb(255 255 255 / 10%);
-    }
-    .money small {
-      opacity: 0.7;
-      font-size: 0.72rem;
-    }
-    .money strong {
-      font: 700 1rem/1.1 var(--font-display);
-    }
-    .legs {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 10px;
-    }
-    .legs__end {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .legs__end--to {
+    .net__gross {
+      font-size: 0.8rem;
+      opacity: 0.75;
       text-align: right;
     }
-    .legs__mid {
-      font: 700 0.8rem/1 var(--font-mono, monospace);
-      color: var(--red);
-      text-align: center;
+    .net__bar {
+      display: flex;
+      height: 6px;
+      border-radius: 3px;
+      overflow: hidden;
+      background: rgb(255 255 255 / 20%);
+    }
+    .net__bar span {
+      background: var(--red);
+    }
+    .net__fee {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      opacity: 0.7;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .step {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.72rem;
+      color: var(--muted, #6b6b70);
+    }
+    .step::before {
+      content: '';
+      height: 5px;
+      border-radius: 3px;
+      background: var(--line, #e4e4e7);
+    }
+    .step--done {
+      color: var(--black);
+    }
+    .step--done::before {
+      background: var(--black);
+    }
+    .step--now {
+      font-weight: 700;
+      color: var(--black);
+    }
+    .step--now::before {
+      background: var(--red);
+    }
+    .quick {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    .quick__item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 12px 10px;
+      border-radius: 16px;
+      background: var(--panel, #f3f3f4);
+      min-width: 0;
+    }
+    .quick__item strong {
+      font: 700 1rem/1.1 var(--font-display);
+      white-space: nowrap;
     }
     .cap {
-      font: 600 0.7rem/1 var(--font-mono, monospace);
+      font: 600 0.65rem/1 var(--font-mono, monospace);
       letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--muted, #6b6b70);
     }
-    .facts {
+    .head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .head h2 {
+      margin: 0;
+    }
+    .timeline {
+      display: flex;
+      flex-direction: column;
+    }
+    .tl {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 16px 1fr;
       gap: 12px;
     }
-    .fact {
+    .tl__rail {
+      position: relative;
+      display: flex;
+      justify-content: center;
+    }
+    .tl__dot {
+      width: 12px;
+      height: 12px;
+      margin-top: 4px;
+      border-radius: 50%;
+      background: var(--black);
+      z-index: 1;
+    }
+    .tl__dot--to {
+      background: var(--red);
+    }
+    .tl:not(:last-child) .tl__rail::after {
+      content: '';
+      position: absolute;
+      top: 18px;
+      bottom: -6px;
+      width: 2px;
+      background: var(--line, #e4e4e7);
+    }
+    .tl__body {
       display: flex;
       flex-direction: column;
       gap: 2px;
+      padding-bottom: 16px;
     }
-    .fact strong {
-      font-size: 1.05rem;
+    .tl__body strong {
+      font: 700 1.05rem/1.2 var(--font-display);
+    }
+    .tl__body .muted {
+      font-size: 0.82rem;
+    }
+    .note {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: var(--panel, #f3f3f4);
+      border-left: 4px solid var(--red);
+    }
+    .note p {
+      margin: 0;
+      font-size: 0.92rem;
+    }
+    .photo {
+      overflow: hidden;
+      border-radius: 18px;
+    }
+    :host ::ng-deep .photo .photo {
+      height: 200px;
+      max-height: none;
+      border-radius: 0;
+    }
+    .customer {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .avatar {
+      display: grid;
+      place-items: center;
+      flex: none;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--black);
+      color: #fff;
+      font: 700 1.05rem/1 var(--font-display);
+    }
+    .customer__plate {
+      margin-left: auto;
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1.5px solid var(--black);
+      font: 700 0.8rem/1 var(--font-mono, monospace);
+      letter-spacing: 0.06em;
+    }
+    .dock {
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+      margin: 0 -16px;
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+      background: linear-gradient(to top, var(--white) 70%, transparent);
     }
     .cta {
       display: flex;
@@ -168,84 +330,117 @@ import { StopsRouteComponent } from '../../shared/components/stops-route.compone
                 Dia todo
               }
             </span>
-            @if (startIso(); as until) {
-              @if (d.status === 'Scheduled') {
-                <span class="when__count">Começa em <strong><app-countdown [until]="until" endedText="agora" /></strong></span>
+            <div class="when__meta">
+              @if (startIso(); as until) {
+                @if (d.status === 'Scheduled') {
+                  <span class="pill pill--hot">Começa em <app-countdown [until]="until" endedText="agora" /></span>
+                }
               }
-            }
-            <div class="money">
-              <div>
-                <small>Valor</small>
-                <strong>{{ d.agreedPrice | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</strong>
+              @if (window(); as span) {
+                <span class="pill">Janela de {{ span }}</span>
+              }
+            </div>
+            <div class="net">
+              <div class="net__top">
+                <div>
+                  <span class="net__label">Você recebe</span>
+                  <span class="net__value">{{ net() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</span>
+                </div>
+                <span class="net__gross">de {{ d.agreedPrice | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</span>
               </div>
-              <div>
-                <small>Taxa</small>
-                <strong>{{ d.platformFee ?? fee | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</strong>
-              </div>
-              <div>
-                <small>Você recebe</small>
-                <strong>{{ d.driverNet ?? d.agreedPrice - fee | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</strong>
+              <div class="net__bar" aria-hidden="true"><span [style.width.%]="netShare()"></span></div>
+              <div class="net__fee">
+                <span>Taxa da plataforma</span>
+                <span>{{ feeValue() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</span>
               </div>
             </div>
+          </section>
+
+          @if (stage() >= 0) {
+            <ol class="steps" aria-label="Andamento da corrida">
+              @for (step of stepNames; track step; let i = $index) {
+                <li class="step" [class.step--done]="i < stage()" [class.step--now]="i === stage()">{{ step }}</li>
+              }
+            </ol>
+          }
+
+          <div class="quick">
+            <div class="quick__item">
+              <span class="cap">Peso</span>
+              <strong>{{ cargo()?.cargoWeightKg ?? d.cargoWeightKg ?? 0 | number: '1.0-2' : 'pt-BR' }} kg</strong>
+            </div>
+            <div class="quick__item">
+              <span class="cap">Paradas</span>
+              <strong>{{ d.totalStops }}</strong>
+            </div>
+          </div>
+
+          <section class="card stack">
+            <h2>Rota</h2>
+            <div class="timeline">
+              <div class="tl">
+                <div class="tl__rail"><span class="tl__dot"></span></div>
+                <div class="tl__body">
+                  <span class="cap">Coleta</span>
+                  <strong>{{ origin() }}</strong>
+                  @if (originCity(); as city) {
+                    <span class="muted">{{ city }}</span>
+                  }
+                </div>
+              </div>
+              <div class="tl">
+                <div class="tl__rail"><span class="tl__dot tl__dot--to"></span></div>
+                <div class="tl__body">
+                  <span class="cap">Entrega</span>
+                  <strong>{{ destination() }}</strong>
+                  @if (destinationCity(); as city) {
+                    <span class="muted">{{ city }}</span>
+                  }
+                </div>
+              </div>
+            </div>
+            <app-route-map-card [route]="map()" [loading]="mapLoading()" [error]="mapError()" />
+            @if (stops().length > 1) {
+              <app-stops-route [stops]="stops()" />
+            }
           </section>
 
           <section class="card stack">
             <h2>Carga</h2>
             <p class="strong">{{ cargo()?.cargoDescription ?? d.cargoDescription ?? '—' }}</p>
-            <div class="facts">
-              <div class="fact">
-                <span class="cap">Peso</span>
-                <strong>{{ cargo()?.cargoWeightKg ?? d.cargoWeightKg ?? 0 | number: '1.0-2' : 'pt-BR' }} kg</strong>
-              </div>
-              <div class="fact">
-                <span class="cap">Paradas</span>
-                <strong>{{ d.totalStops }}</strong>
-              </div>
-              @if (d.vehiclePlate; as plate) {
-                <div class="fact">
-                  <span class="cap">Veículo</span>
-                  <strong class="mono">{{ plate }}</strong>
-                </div>
-              }
-              @if (d.customerName; as customer) {
-                <div class="fact">
-                  <span class="cap">Cliente</span>
-                  <strong>{{ customer }}</strong>
-                </div>
-              }
-            </div>
             @if (cargo()?.driverNote; as note) {
-              <p class="notice small" role="note">{{ note }}</p>
+              <div class="note" role="note">
+                <span class="cap">Recado do cliente</span>
+                <p>{{ note }}</p>
+              </div>
             }
             @if (cargo()?.hasCargoPhoto) {
-              <app-cargo-photo [freightId]="d.freightRequestId" />
+              <div class="photo"><app-cargo-photo [freightId]="d.freightRequestId" /></div>
             }
           </section>
 
-          <section class="card stack">
-            <h2>Rota</h2>
-            @if (distance(); as km) {
-              <div class="legs">
-                <div class="legs__end">
-                  <span class="cap">Coleta</span>
-                  <strong>{{ origin() }}</strong>
-                </div>
-                <span class="legs__mid">{{ km }}@if (duration(); as time) { · {{ time }}}</span>
-                <div class="legs__end legs__end--to">
-                  <span class="cap">Entrega</span>
-                  <strong>{{ destination() }}</strong>
-                </div>
+          @if (d.customerName || d.vehiclePlate) {
+            <section class="card">
+              <div class="customer">
+                @if (d.customerName; as customer) {
+                  <span class="avatar" aria-hidden="true">{{ customer.charAt(0).toUpperCase() }}</span>
+                  <div>
+                    <span class="cap">Cliente</span>
+                    <div class="strong">{{ customer }}</div>
+                  </div>
+                }
+                @if (d.vehiclePlate; as plate) {
+                  <span class="customer__plate">{{ plate }}</span>
+                }
               </div>
-            }
-            <app-route-map-card [route]="map()" [loading]="mapLoading()" [error]="mapError()" />
-            @if (stops().length > 0) {
-              <app-stops-route [stops]="stops()" />
-            }
-          </section>
+            </section>
+          }
 
-          <a class="cta" [routerLink]="['/driver/deliveries', d.deliveryId]">
-            {{ d.status === 'Scheduled' ? 'Abrir corrida' : 'Continuar corrida' }}
-          </a>
+          <div class="dock">
+            <a class="cta" [routerLink]="['/driver/deliveries', d.deliveryId]">
+              {{ d.status === 'Scheduled' ? 'Abrir corrida' : 'Continuar corrida' }}
+            </a>
+          </div>
         } @else if (load.loading()) {
           <div class="skeleton"></div>
         }
@@ -282,6 +477,44 @@ export class AgendaDetailPage {
     const iso = this.summary()?.agendaEndsAt;
     return iso ? parseUtc(iso) : null;
   });
+  protected readonly stepNames = ['Agendada', 'Coleta', 'Em trânsito', 'Entregue'];
+  protected readonly stage = computed(() => {
+    switch (this.summary()?.status) {
+      case 'Scheduled':
+        return 0;
+      case 'ToPickup':
+        return 1;
+      case 'PickedUp':
+      case 'InTransit':
+      case 'Incident':
+        return 2;
+      case 'Delivered':
+        return 3;
+      default:
+        return -1;
+    }
+  });
+  protected readonly feeValue = computed(() => this.summary()?.platformFee ?? this.fee);
+  protected readonly net = computed(() => {
+    const d = this.summary();
+    return d ? (d.driverNet ?? d.agreedPrice - this.feeValue()) : 0;
+  });
+  protected readonly netShare = computed(() => {
+    const price = this.summary()?.agreedPrice ?? 0;
+    return price > 0 ? Math.max(0, Math.min(100, (this.net() / price) * 100)) : 0;
+  });
+  protected readonly window = computed(() => {
+    const from = this.start();
+    const to = this.end();
+    if (!from || !to) {
+      return null;
+    }
+    return formatDuration((to.getTime() - from.getTime()) / 1000);
+  });
+  protected readonly originCity = computed(() => (this.summary()?.originDistrict ? this.summary()?.originCity : null));
+  protected readonly destinationCity = computed(() =>
+    this.summary()?.destinationDistrict ? this.summary()?.destinationCity : null,
+  );
   protected readonly stops = computed(() => fromRouteStops(this.cargo()?.stops ?? []));
   protected readonly distance = computed(() => formatDistance(this.summary()?.routeDistanceMeters ?? this.map()?.distanceMeters));
   protected readonly duration = computed(() => formatDuration(this.summary()?.routeDurationSeconds ?? this.map()?.durationSeconds));

@@ -196,6 +196,7 @@ export class FreightBoardPage {
   private readonly freeFreight = inject(FreeFreightService);
   private readonly modals = inject(ModalController);
   private readonly toast = inject(ToastService);
+  private readonly seen = new Set<string>();
 
   protected readonly typeLabel = VEHICLE_TYPE_LABEL;
   protected readonly load = createRequestState();
@@ -291,7 +292,18 @@ export class FreightBoardPage {
       firstValueFrom(this.marketplace.proposals()),
     ]);
     this.freights.set(freights);
+    this.reportSeen(freights);
     this.vehicles.set(vehicles);
     this.proposals.set(proposals);
+  }
+
+  private reportSeen(freights: readonly OpenFreight[]): void {
+    for (const freight of freights) {
+      if (this.seen.has(freight.id)) {
+        continue;
+      }
+      this.seen.add(freight.id);
+      this.marketplace.markSeen(freight.id).subscribe({ error: () => this.seen.delete(freight.id) });
+    }
   }
 }

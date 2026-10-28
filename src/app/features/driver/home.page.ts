@@ -44,8 +44,8 @@ const UNDERWAY = ['ToPickup', 'PickedUp', 'InTransit', 'Incident'] as const;
     }
     .home-map {
       position: relative;
-      height: 46dvh;
-      min-height: 280px;
+      height: 36dvh;
+      min-height: 220px;
       background: var(--black);
     }
     .home-map__off {
@@ -53,14 +53,15 @@ const UNDERWAY = ['ToPickup', 'PickedUp', 'InTransit', 'Incident'] as const;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 12px;
+      gap: 10px;
       height: 100%;
       padding: 24px;
       text-align: center;
       color: #fff;
+      font-size: 0.9rem;
     }
     .home-map__off ion-icon {
-      font-size: 36px;
+      font-size: 30px;
       color: var(--red);
     }
     .sheet {
@@ -68,12 +69,19 @@ const UNDERWAY = ['ToPickup', 'PickedUp', 'InTransit', 'Incident'] as const;
       z-index: 1;
       display: flex;
       flex-direction: column;
-      gap: 16px;
-      margin-top: -28px;
-      padding: 22px 16px 140px;
-      border-radius: 28px 28px 0 0;
+      gap: 20px;
+      margin-top: -24px;
+      padding: 10px 16px 140px;
+      border-radius: 24px 24px 0 0;
       background: var(--white);
-      box-shadow: 0 -10px 30px rgb(0 0 0 / 10%);
+      box-shadow: 0 -8px 24px rgb(0 0 0 / 8%);
+    }
+    .grabber {
+      align-self: center;
+      width: 36px;
+      height: 4px;
+      border-radius: 2px;
+      background: var(--line, #e4e4e7);
     }
     .greet {
       display: flex;
@@ -81,99 +89,166 @@ const UNDERWAY = ['ToPickup', 'PickedUp', 'InTransit', 'Incident'] as const;
       justify-content: space-between;
       gap: 12px;
     }
+    .greet__hi {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--muted, #6b6b70);
+    }
     .greet h1 {
       margin: 0;
-      font: 700 1.6rem/1.1 var(--font-display);
+      font: 700 1.35rem/1.15 var(--font-display);
       letter-spacing: -0.02em;
     }
     .plate {
       padding: 6px 10px;
-      border-radius: 10px;
+      border-radius: 8px;
       border: 1.5px solid var(--black);
-      font: 700 0.85rem/1 var(--font-mono, monospace);
+      color: inherit;
+      text-decoration: none;
+      font: 700 0.8rem/1 var(--font-mono, monospace);
       letter-spacing: 0.06em;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      align-items: end;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: var(--panel, #f3f3f4);
+    }
+    .summary__cell {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .summary__cell + .summary__cell {
+      padding-left: 12px;
+      border-left: 1px solid var(--line, #e4e4e7);
+    }
+    .summary__value {
+      font: 700 1.1rem/1.1 var(--font-display);
+      white-space: nowrap;
+    }
+    .summary__cell--main .summary__value {
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+    }
+    .summary__label {
+      font-size: 0.7rem;
+      color: var(--muted, #6b6b70);
     }
     .ride {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      padding: 16px;
-      border-radius: 20px;
+      gap: 6px;
+      padding: 14px 16px;
+      border-radius: 18px;
       background: var(--black);
       color: #fff;
       text-decoration: none;
     }
     .ride .small {
       margin: 0;
-      opacity: 0.75;
+      opacity: 0.7;
+    }
+    .ride__progress {
+      height: 4px;
+      border-radius: 2px;
+      background: rgb(255 255 255 / 20%);
+      overflow: hidden;
+    }
+    .ride__progress span {
+      display: block;
+      height: 100%;
+      background: var(--red);
     }
     .cta {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 18px;
-      border-radius: 20px;
-      background: var(--red);
-      color: #fff;
-      font: 700 1.05rem/1 var(--font-display);
-      text-decoration: none;
-    }
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-    .stat {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding: 14px 12px;
-      border-radius: 18px;
-      background: var(--panel, #f3f3f4);
-    }
-    .stat__value {
-      font: 700 1.15rem/1.1 var(--font-display);
-      white-space: nowrap;
-    }
-    .proposals {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .proposals__head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .proposals__head h2 {
-      margin: 0;
-      font: 700 1.05rem/1.1 var(--font-display);
-    }
-    .proposal {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
       padding: 14px 16px;
       border-radius: 18px;
-      border: 1.5px solid var(--line, #e4e4e7);
+      background: var(--red);
+      color: #fff;
+      text-decoration: none;
+    }
+    .cta strong {
+      display: block;
+      font: 700 1rem/1.2 var(--font-display);
+    }
+    .cta span {
+      font-size: 0.8rem;
+      opacity: 0.85;
+    }
+    .group {
+      display: flex;
+      flex-direction: column;
+    }
+    .group__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 6px;
+    }
+    .group__head h2 {
+      margin: 0;
+      font: 700 0.75rem/1 var(--font-display);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--muted, #6b6b70);
+    }
+    .group__head a {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--red);
+      text-decoration: none;
+    }
+    .row-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--line, #e4e4e7);
       color: inherit;
       text-decoration: none;
     }
-    .proposal__price {
-      font: 700 1.2rem/1.1 var(--font-display);
+    .row-item__icon {
+      display: grid;
+      place-items: center;
+      flex: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: var(--panel, #f3f3f4);
+      font-size: 18px;
     }
-    .proposal__title {
-      font: 700 1rem/1.15 var(--font-display);
+    .row-item__body {
+      flex: 1;
+      min-width: 0;
     }
-    .proposal__meta {
-      font-size: 0.8rem;
+    .row-item__title {
+      overflow: hidden;
+      font: 600 0.95rem/1.25 var(--font-display);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .row-item__meta {
+      font-size: 0.78rem;
       color: var(--muted, #6b6b70);
     }
-    .stat__label {
+    .row-item__end {
+      flex: none;
+      text-align: right;
       font-size: 0.75rem;
       color: var(--muted, #6b6b70);
+    }
+    .row-item__end strong {
+      display: block;
+      font: 700 1rem/1.2 var(--font-display);
+      color: var(--black);
     }
   `,
   template: `
@@ -188,15 +263,20 @@ const UNDERWAY = ['ToPickup', 'PickedUp', 'InTransit', 'Incident'] as const;
         } @else {
           <div class="home-map__off">
             <ion-icon name="location-outline" aria-hidden="true" />
-            <strong>Ative a localização para ver o mapa</strong>
+            <span>Ative a localização para ver o mapa</span>
             <button class="btn btn--sm" type="button" (click)="locate()">Ativar localização</button>
           </div>
         }
       </div>
 
       <section class="sheet">
+        <span class="grabber" aria-hidden="true"></span>
+
         <div class="greet">
-          <h1>Olá, {{ firstName() }}</h1>
+          <div>
+            <span class="greet__hi">Olá,</span>
+            <h1>{{ firstName() }}</h1>
+          </div>
           @if (vehicle(); as v) {
             <a class="plate" routerLink="/driver/profile" [attr.aria-label]="'Veículo ' + vehicleLabel[v.type]">
               {{ v.plate }}
@@ -206,6 +286,21 @@ const UNDERWAY = ['ToPickup', 'PickedUp', 'InTransit', 'Incident'] as const;
 
         <app-problem-alert [error]="load.error()" />
 
+        <div class="summary">
+          <div class="summary__cell summary__cell--main">
+            <span class="summary__value">{{ earnings() | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</span>
+            <span class="summary__label">Ganhos hoje</span>
+          </div>
+          <div class="summary__cell">
+            <span class="summary__value">{{ today().length }}</span>
+            <span class="summary__label">Hoje</span>
+          </div>
+          <div class="summary__cell">
+            <span class="summary__value">{{ total() }}</span>
+            <span class="summary__label">Concluídas</span>
+          </div>
+        </div>
+
         @if (underway(); as current) {
           <a class="ride" [routerLink]="['/driver/deliveries', current.deliveryId]">
             <div class="row row--between">
@@ -213,66 +308,65 @@ const UNDERWAY = ['ToPickup', 'PickedUp', 'InTransit', 'Incident'] as const;
               <app-status-chip [view]="statusView[current.status]" />
             </div>
             <p class="small">{{ current.completedStops }} de {{ current.totalStops }} paradas concluídas</p>
-            <span class="link-btn" style="color: #fff">Continuar corrida</span>
+            <div class="ride__progress" aria-hidden="true">
+              <span [style.width.%]="progress(current)"></span>
+            </div>
           </a>
         } @else {
           <a class="cta" routerLink="/driver/freights">
-            <ion-icon name="cube-outline" aria-hidden="true" />
-            Ver fretes abertos
+            <div>
+              <strong>Ver fretes abertos</strong>
+              <span>{{ openCount() === 0 ? 'Nenhum frete no momento' : openCount() + ' esperando proposta' }}</span>
+            </div>
+            <ion-icon name="chevron-forward-outline" aria-hidden="true" />
           </a>
         }
 
-        <div class="stats">
-          <div class="stat">
-            <span class="stat__value">{{ earnings() | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}</span>
-            <span class="stat__label">Ganhos hoje</span>
-          </div>
-          <div class="stat">
-            <span class="stat__value">{{ today().length }}</span>
-            <span class="stat__label">Corridas hoje</span>
-          </div>
-          <div class="stat">
-            <span class="stat__value">{{ total() }}</span>
-            <span class="stat__label">Concluídas</span>
-          </div>
-        </div>
-
         @if (openFreights().length > 0) {
-          <div class="proposals">
-            <div class="proposals__head">
-              <h2>Fretes esperando proposta</h2>
-              <a class="link-btn" routerLink="/driver/freights">Ver todos</a>
+          <div class="group">
+            <div class="group__head">
+              <h2>Fretes abertos</h2>
+              <a routerLink="/driver/freights">Ver todos</a>
             </div>
             @for (freight of openFreights(); track freight.id) {
-              <a class="proposal" routerLink="/driver/freights">
-                <div>
-                  <div class="proposal__title">{{ freight.cargoDescription }}</div>
-                  <div class="proposal__meta">
+              <a class="row-item" routerLink="/driver/freights">
+                <span class="row-item__icon"><ion-icon name="cube-outline" aria-hidden="true" /></span>
+                <div class="row-item__body">
+                  <div class="row-item__title">{{ freight.cargoDescription }}</div>
+                  <div class="row-item__meta">
                     {{ freight.cargoWeightKg }} kg
                     @if (distance(freight); as km) {
                       · {{ km }}
                     }
+                    · {{ freight.pickupCount + freight.deliveryCount }} paradas
                   </div>
                 </div>
-                <span class="proposal__meta">fecha em <app-countdown [until]="freight.proposalDeadline" /></span>
+                <div class="row-item__end">
+                  fecha em
+                  <strong><app-countdown [until]="freight.proposalDeadline" /></strong>
+                </div>
               </a>
             }
           </div>
         }
 
         @if (pending().length > 0) {
-          <div class="proposals">
-            <div class="proposals__head">
+          <div class="group">
+            <div class="group__head">
               <h2>Propostas pendentes</h2>
-              <a class="link-btn" routerLink="/driver/proposals">Ver todas</a>
+              <a routerLink="/driver/proposals">Ver todas</a>
             </div>
             @for (proposal of pending(); track proposal.id) {
-              <a class="proposal" routerLink="/driver/proposals">
-                <div>
-                  <div class="proposal__price">{{ proposal.price | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</div>
-                  <div class="proposal__meta">Frete #{{ shortId(proposal.freightRequestId) }}</div>
+              <a class="row-item" routerLink="/driver/proposals">
+                <span class="row-item__icon"><ion-icon name="time-outline" aria-hidden="true" /></span>
+                <div class="row-item__body">
+                  <div class="row-item__title">Frete #{{ shortId(proposal.freightRequestId) }}</div>
+                  <div class="row-item__meta">Aguardando resposta do cliente</div>
                 </div>
-                <span class="proposal__meta">expira em <app-countdown [until]="proposal.expiresAt" /></span>
+                <div class="row-item__end">
+                  expira em
+                  <strong><app-countdown [until]="proposal.expiresAt" /></strong>
+                </div>
               </a>
             }
           </div>
@@ -348,6 +442,14 @@ export class DriverHomePage {
     } catch {
       this.position.set(null);
     }
+  }
+
+  protected openCount(): number {
+    return this.open().length;
+  }
+
+  protected progress(delivery: DriverDeliverySummary): number {
+    return delivery.totalStops > 0 ? Math.round((delivery.completedStops / delivery.totalStops) * 100) : 0;
   }
 
   protected distance(freight: OpenFreight): string {

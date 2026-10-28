@@ -9,6 +9,7 @@ import { MediaFile, MediaKind } from '../../../core/models';
 import { MEDIA_KIND_LABEL } from '../../../core/ui/labels';
 import { createRequestState } from '../../../core/ui/request-state';
 import { ToastService } from '../../../core/ui/toast.service';
+import { shrinkImageFile } from '../../../core/util/image-file';
 import { ProblemAlertComponent } from '../../../shared/components/problem-alert.component';
 import { UtcPipe } from '../../../shared/pipes/utc.pipe';
 import {
@@ -164,11 +165,12 @@ export class DocumentsSectionComponent {
   }
 
   protected async register(): Promise<void> {
-    const file = this.picked();
-    if (!file) {
+    const picked = this.picked();
+    if (!picked) {
       return;
     }
     const result = await this.request.run(async () => {
+      const file = await shrinkImageFile(picked);
       const storageKey = await this.uploader.upload(file, this.kind(), this.userId());
       return firstValueFrom(
         this.driver.registerDocument({

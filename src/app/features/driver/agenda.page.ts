@@ -16,6 +16,7 @@ import { StatusChipComponent } from '../../shared/components/status-chip.compone
 
 const UNDERWAY = ['ToPickup', 'PickedUp', 'InTransit', 'Incident'] as const;
 const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'] as const;
+const CELLS = 42;
 
 interface AgendaEntry {
   readonly delivery: DriverDeliverySummary;
@@ -25,12 +26,12 @@ interface AgendaEntry {
   readonly timed: boolean;
 }
 
-interface WeekDay {
+interface MonthCell {
   readonly date: Date;
   readonly key: string;
-  readonly letter: string;
   readonly count: number;
   readonly today: boolean;
+  readonly outside: boolean;
 }
 
 function startOfDay(date: Date): Date {
@@ -111,45 +112,43 @@ function entryOf(delivery: DriverDeliverySummary): AgendaEntry {
       color: var(--black);
       font: 600 0.85rem/1 var(--font-body);
     }
-    .week {
+    .cal {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
+      gap: 4px;
+      padding: 12px 8px;
+      border-radius: 24px;
+      background: var(--panel, #f3f3f4);
+    }
+    .cal__letter {
+      padding-bottom: 4px;
+      text-align: center;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      opacity: 0.55;
     }
     .day {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 6px;
-      padding: 10px 0 8px;
+      gap: 3px;
+      padding: 6px 0 5px;
       border: 0;
-      border-radius: 18px;
-      background: var(--panel, #f3f3f4);
+      border-radius: 14px;
+      background: transparent;
       color: var(--black);
-      font-family: var(--font-body);
+      font: 600 0.95rem/1 var(--font-display);
     }
-    .day__letter {
-      font-size: 0.7rem;
-      letter-spacing: 0.08em;
-      opacity: 0.6;
+    .day--outside {
+      opacity: 0.3;
     }
-    .day__num {
-      display: grid;
-      place-items: center;
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      font: 700 1rem/1 var(--font-display);
-    }
-    .day--today .day__num {
+    .day--today {
       box-shadow: inset 0 0 0 2px var(--red);
     }
     .day--selected {
       background: var(--black);
       color: #fff;
-    }
-    .day--selected .day__letter {
-      opacity: 0.8;
+      opacity: 1;
     }
     .dots {
       display: flex;
@@ -357,29 +356,31 @@ function entryOf(delivery: DriverDeliverySummary): AgendaEntry {
           <div class="month">
             <strong>{{ selected() | date: 'MMMM y' }}</strong>
             <div class="nav">
-              <button type="button" aria-label="Semana anterior" (click)="shiftWeek(-1)">
+              <button type="button" aria-label="Mês anterior" (click)="shiftMonth(-1)">
                 <ion-icon name="arrow-back-outline" aria-hidden="true" />
               </button>
               <button type="button" (click)="goToday()">Hoje</button>
-              <button type="button" aria-label="Próxima semana" (click)="shiftWeek(1)">
+              <button type="button" aria-label="Próximo mês" (click)="shiftMonth(1)">
                 <ion-icon name="chevron-forward-outline" aria-hidden="true" />
               </button>
             </div>
           </div>
 
-          <div class="week" role="tablist" aria-label="Dias da semana">
-            @for (day of week(); track day.key) {
+          <div class="cal" role="grid" aria-label="Calendário do mês">
+            @for (letter of letters; track $index) {
+              <span class="cal__letter" aria-hidden="true">{{ letter }}</span>
+            }
+            @for (day of month(); track day.key) {
               <button
                 type="button"
-                role="tab"
                 class="day"
                 [class.day--today]="day.today"
+                [class.day--outside]="day.outside"
                 [class.day--selected]="day.key === selectedKey()"
-                [attr.aria-selected]="day.key === selectedKey()"
+                [attr.aria-pressed]="day.key === selectedKey()"
                 (click)="select(day.date)"
               >
-                <span class="day__letter">{{ day.letter }}</span>
-                <span class="day__num">{{ day.date | date: 'd' }}</span>
+                <span>{{ day.date | date: 'd' }}</span>
                 <span class="dots" aria-hidden="true">
                   @for (n of dotsOf(day.count); track $index) {
                     <i></i>
@@ -522,19 +523,22 @@ export class AgendaPage {
     return groups;
   });
 
-  protected readonly week = computed<readonly WeekDay[]>(() => {
+  protected readonly letters = WEEKDAYS;
+
+  protected readonly month = computed<readonly MonthCell[]>(() => {
     const selected = this.selected();
-    const sunday = addDays(selected, -selected.getDay());
+    const first = new Date(selected.getFullYear(), selected.getMonth(), 1);
+    const gridStart = addDays(first, -first.getDay());
     const todayKey = keyOf(new Date());
-    return Array.from({ length: 7 }, (_, index) => {
-      const date = addDays(sunday, index);
+    return Array.from({ length: CELLS }, (_, index) => {
+      const date = addDays(gridStart, index);
       const key = keyOf(date);
       return {
         date,
         key,
-        letter: WEEKDAYS[index] ?? '',
         count: this.byDay().get(key)?.length ?? 0,
         today: key === todayKey,
+        outside: date.getMonth() !== selected.getMonth(),
       };
     });
   });
@@ -557,8 +561,11 @@ export class AgendaPage {
     this.selected.set(date);
   }
 
-  protected shiftWeek(direction: number): void {
-    this.selected.set(addDays(this.selected(), direction * 7));
+  protected shiftMonth(direction: number): void {
+    const current = this.selected();
+    const target = new Date(current.getFullYear(), current.getMonth() + direction, 1);
+    const lastDay = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+    this.selected.set(new Date(target.getFullYear(), target.getMonth(), Math.min(current.getDate(), lastDay)));
   }
 
   protected goToday(): void {

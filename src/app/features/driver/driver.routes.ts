@@ -45,6 +45,11 @@ export const DRIVER_ROUTES: Routes = [
   },
   // Pushed over the tabs, full screen, with a back button.
   {
+    path: 'agenda/:id',
+    canActivate: [driverApprovedGuard],
+    loadComponent: () => import('./agenda-detail.page').then((m) => m.AgendaDetailPage),
+  },
+  {
     path: 'proposals',
     canActivate: [driverApprovedGuard],
     loadComponent: () => import('./proposals.page').then((m) => m.ProposalsPage),

@@ -146,6 +146,19 @@ export interface DriverDeliverySummary {
   driverSigned?: boolean;
   customerSigned?: boolean;
   deliveredAt?: string | null;
+  agendaStartsAt?: string | null;
+  agendaEndsAt?: string | null;
+  cargoDescription?: string | null;
+  cargoWeightKg?: number | null;
+  originDistrict?: string | null;
+  originCity?: string | null;
+  destinationDistrict?: string | null;
+  destinationCity?: string | null;
+  routeDistanceMeters?: number | null;
+  routeDurationSeconds?: number | null;
+  vehiclePlate?: string | null;
+  vehicleModel?: string | null;
+  customerName?: string | null;
   createdAt: string;
 }
 

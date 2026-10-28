@@ -9,6 +9,8 @@ import { DELIVERY_STATUS_VIEW } from '../../core/ui/labels';
 import { completeRefresh } from '../../core/ui/refresher';
 import { createRequestState } from '../../core/ui/request-state';
 import { parseUtc } from '../../core/util/dates';
+import { formatDistance } from '../../core/util/route-format';
+import { CountdownComponent } from '../../shared/components/countdown.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { HeroComponent } from '../../shared/components/hero.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
@@ -20,6 +22,8 @@ const DAY_MS = 86_400_000;
 interface AgendaEntry {
   readonly delivery: DriverDeliverySummary;
   readonly start: Date;
+  readonly end: Date | null;
+  readonly startIso: string;
   readonly timed: boolean;
 }
 
@@ -29,6 +33,7 @@ interface AgendaDay {
   readonly date: Date;
   readonly late: boolean;
   readonly entries: readonly AgendaEntry[];
+  readonly total: number;
 }
 
 function startOfDay(date: Date): Date {
@@ -36,8 +41,15 @@ function startOfDay(date: Date): Date {
 }
 
 function entryOf(delivery: DriverDeliverySummary): AgendaEntry {
-  const timed = delivery.scheduledPickupAt !== null;
-  return { delivery, timed, start: parseUtc(delivery.scheduledPickupAt ?? delivery.createdAt) };
+  const startIso = delivery.agendaStartsAt ?? delivery.scheduledPickupAt ?? delivery.createdAt;
+  const timed = (delivery.agendaStartsAt ?? delivery.scheduledPickupAt) != null;
+  return {
+    delivery,
+    timed,
+    startIso,
+    start: parseUtc(startIso),
+    end: delivery.agendaEndsAt ? parseUtc(delivery.agendaEndsAt) : null,
+  };
 }
 
 @Component({
@@ -49,6 +61,7 @@ function entryOf(delivery: DriverDeliverySummary): AgendaEntry {
     IonContent,
     IonRefresher,
     IonRefresherContent,
+    CountdownComponent,
     EmptyStateComponent,
     HeroComponent,
     ProblemAlertComponent,
@@ -165,6 +178,38 @@ function entryOf(delivery: DriverDeliverySummary): AgendaEntry {
     .slot__card--late {
       border-left-color: var(--red);
     }
+    .slot__route {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    .slot__route span:nth-child(2) {
+      flex: 1;
+      height: 0;
+      border-top: 2px dotted var(--red);
+    }
+    .slot__chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .pill {
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: var(--panel, #f3f3f4);
+      font-size: 0.75rem;
+    }
+    .pill--soon {
+      background: var(--red);
+      color: #fff;
+      font-weight: 700;
+    }
+    .day__sum {
+      margin-left: auto;
+      font-size: 0.8rem;
+      color: var(--muted, #6b6b70);
+    }
     .slot__row {
       display: flex;
       align-items: center;
@@ -210,12 +255,19 @@ function entryOf(delivery: DriverDeliverySummary): AgendaEntry {
             <div class="day__head">
               <h2>{{ day.label }}</h2>
               <span>{{ day.date | date: 'dd/MM' }}</span>
+              <span class="day__sum">
+                {{ day.entries.length }} {{ day.entries.length === 1 ? 'corrida' : 'corridas' }} ·
+                {{ day.total | currency: 'BRL' : 'symbol' : '1.0-0' : 'pt-BR' }}
+              </span>
             </div>
             @for (entry of day.entries; track entry.delivery.deliveryId) {
-              <a class="slot" [routerLink]="['/driver/deliveries', entry.delivery.deliveryId]">
+              <a class="slot" [routerLink]="['/driver/agenda', entry.delivery.deliveryId]">
                 <div class="slot__time">
                   @if (entry.timed) {
                     {{ entry.start | date: 'HH:mm' }}
+                    @if (entry.end; as finish) {
+                      <small>até {{ finish | date: 'HH:mm' }}</small>
+                    }
                   } @else {
                     <small>Dia todo</small>
                   }
@@ -225,7 +277,28 @@ function entryOf(delivery: DriverDeliverySummary): AgendaEntry {
                     <span class="slot__price">{{ entry.delivery.agreedPrice | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</span>
                     <app-status-chip [view]="statusView[entry.delivery.status]" />
                   </div>
-                  <span class="muted small">{{ entry.delivery.totalStops }} {{ entry.delivery.totalStops === 1 ? 'parada' : 'paradas' }} · coleta {{ entry.timed ? 'marcada' : 'no dia do pedido' }}</span>
+                  @if (entry.delivery.originDistrict) {
+                    <div class="slot__route">
+                      <span>{{ entry.delivery.originDistrict }}</span>
+                      <span aria-hidden="true"></span>
+                      <span>{{ entry.delivery.destinationDistrict }}</span>
+                    </div>
+                  }
+                  @if (entry.delivery.cargoDescription) {
+                    <span class="small">{{ entry.delivery.cargoDescription }}</span>
+                  }
+                  <div class="slot__chips">
+                    @if (entry.timed && !day.late) {
+                      <span class="pill pill--soon">em <app-countdown [until]="entry.startIso" endedText="agora" /></span>
+                    }
+                    <span class="pill">{{ entry.delivery.totalStops }} {{ entry.delivery.totalStops === 1 ? 'parada' : 'paradas' }}</span>
+                    @if (distance(entry.delivery); as km) {
+                      <span class="pill">{{ km }}</span>
+                    }
+                    @if (entry.delivery.cargoWeightKg) {
+                      <span class="pill">{{ entry.delivery.cargoWeightKg }} kg</span>
+                    }
+                  </div>
                 </div>
               </a>
             }
@@ -280,6 +353,7 @@ export class AgendaPage {
         late: group.late,
         label: this.labelOf(group.date, group.late, today),
         entries: group.entries.sort((a, b) => a.start.getTime() - b.start.getTime()),
+        total: group.entries.reduce((sum, entry) => sum + entry.delivery.agreedPrice, 0),
       }))
       .sort((a, b) => Number(b.late) - Number(a.late) || a.date.getTime() - b.date.getTime());
   });
@@ -291,6 +365,10 @@ export class AgendaPage {
   protected async refresh(event: Event): Promise<void> {
     await this.reload();
     completeRefresh(event);
+  }
+
+  protected distance(delivery: DriverDeliverySummary): string | null {
+    return formatDistance(delivery.routeDistanceMeters);
   }
 
   protected percent(delivery: DriverDeliverySummary): number {

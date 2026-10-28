@@ -21,6 +21,7 @@ import { RouteMapCardComponent } from '../../shared/components/route-map-card.co
 import { StatusChipComponent } from '../../shared/components/status-chip.component';
 import { StopsRouteComponent } from '../../shared/components/stops-route.component';
 import { UtcPipe } from '../../shared/pipes/utc.pipe';
+import { ContactCardComponent } from '../../shared/components/contact-card.component';
 import { DeliveryPaymentComponent } from './delivery-payment.component';
 
 /** The API has no push or websocket yet, so a delivery under way is polled every few seconds. */
@@ -36,6 +37,7 @@ const TRACK_POLL_MS = 15_000;
     IonIcon,
     IonRefresher,
     IonRefresherContent,
+    ContactCardComponent,
     DeliveryPaymentComponent,
     DeliveryTimelineComponent,
     PageBarComponent,
@@ -118,6 +120,10 @@ const TRACK_POLL_MS = 15_000;
               }
             </div>
           </section>
+
+          @if (d.status !== 'Cancelled') {
+            <app-contact-card role="Motorista" [name]="d.driverName" [phone]="d.driverPhone" />
+          }
 
           <div class="detail">
             <div class="stack stack--lg">

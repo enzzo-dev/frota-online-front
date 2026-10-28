@@ -35,6 +35,7 @@ import { ToastService } from '../../core/ui/toast.service';
 import { googleMapsNavUrl, wazeNavUrl } from '../../core/util/address-format';
 import { StopView, fromRouteStops } from '../../core/util/stop-views';
 import { DeliverySignatures, DeliverySignaturesSheetComponent } from './delivery-signatures-sheet.component';
+import { ContactCardComponent } from '../../shared/components/contact-card.component';
 import { CargoPhotoComponent } from '../../shared/components/cargo-photo.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { PageBarComponent } from '../../shared/components/page-bar.component';
@@ -66,6 +67,7 @@ const CANCELLABLE: readonly DeliveryStatus[] = ['Scheduled', 'ToPickup', 'Incide
 @Component({
   selector: 'app-delivery-route-page',
   imports: [
+    ContactCardComponent,
     DecimalPipe,
     RouterLink,
     IonContent,
@@ -160,6 +162,10 @@ const CANCELLABLE: readonly DeliveryStatus[] = ['Scheduled', 'ToPickup', 'Incide
             </div>
             <p class="small">{{ completed() }} de {{ r.totalStops }} paradas concluídas</p>
           </section>
+
+          @if (status() !== 'Cancelled') {
+            <app-contact-card role="Cliente" [name]="customerName()" [phone]="customerPhone()" />
+          }
 
           <div class="detail">
             <div class="stack stack--lg">
@@ -421,6 +427,8 @@ export class DeliveryRoutePage {
   protected readonly proofProblem = signal<string | null>(null);
   private readonly driverSigned = signal(false);
   private readonly customerSigned = signal(false);
+  protected readonly customerName = signal<string | null>(null);
+  protected readonly customerPhone = signal<string | null>(null);
 
   // Payment, after delivery.
   protected readonly paymentMethod = signal<PaymentMethod>('Pix');
@@ -711,6 +719,8 @@ export class DeliveryRoutePage {
     this.paidInApp.set(summary.payment === 'Paid');
     this.driverSigned.set(summary.driverSigned === true);
     this.customerSigned.set(summary.customerSigned === true);
+    this.customerName.set(summary.customerName ?? null);
+    this.customerPhone.set(summary.customerPhone ?? null);
     this.progress.set(null);
     void this.loadMap();
   }

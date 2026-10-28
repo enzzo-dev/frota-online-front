@@ -13,6 +13,7 @@ import { parseUtc } from '../../core/util/dates';
 import { PLATFORM_FEE } from '../../core/util/fees';
 import { formatDistance, formatDuration } from '../../core/util/route-format';
 import { fromRouteStops } from '../../core/util/stop-views';
+import { ContactCardComponent } from '../../shared/components/contact-card.component';
 import { CargoPhotoComponent } from '../../shared/components/cargo-photo.component';
 import { CountdownComponent } from '../../shared/components/countdown.component';
 import { PageBarComponent } from '../../shared/components/page-bar.component';
@@ -24,6 +25,7 @@ import { StopsRouteComponent } from '../../shared/components/stops-route.compone
 @Component({
   selector: 'app-agenda-detail-page',
   imports: [
+    ContactCardComponent,
     CurrencyPipe,
     DatePipe,
     DecimalPipe,
@@ -364,6 +366,10 @@ import { StopsRouteComponent } from '../../shared/components/stops-route.compone
             </ol>
           }
 
+          @if (d.status !== 'Cancelled') {
+            <app-contact-card role="Cliente" [name]="d.customerName" [phone]="d.customerPhone" />
+          }
+
           <div class="quick">
             <div class="quick__item">
               <span class="cap">Peso</span>
@@ -418,23 +424,6 @@ import { StopsRouteComponent } from '../../shared/components/stops-route.compone
               <div class="photo"><app-cargo-photo [freightId]="d.freightRequestId" /></div>
             }
           </section>
-
-          @if (d.customerName || d.vehiclePlate) {
-            <section class="card">
-              <div class="customer">
-                @if (d.customerName; as customer) {
-                  <span class="avatar" aria-hidden="true">{{ customer.charAt(0).toUpperCase() }}</span>
-                  <div>
-                    <span class="cap">Cliente</span>
-                    <div class="strong">{{ customer }}</div>
-                  </div>
-                }
-                @if (d.vehiclePlate; as plate) {
-                  <span class="customer__plate">{{ plate }}</span>
-                }
-              </div>
-            </section>
-          }
 
           <div class="dock">
             <a class="cta" [routerLink]="['/driver/deliveries', d.deliveryId]">

@@ -28,6 +28,7 @@ export interface CreateFreightRequest {
   requiredVehicleType: VehicleType;
   /** UTC ISO string ending in Z, or null for a same-day freight. */
   scheduledPickupAt: string | null;
+  driverNote?: string | null;
 }
 
 export interface FreightStop {
@@ -53,6 +54,8 @@ export interface Freight {
   stops: FreightStop[];
   approvedProposalId: string | null;
   pendingProposals: number;
+  driverNote?: string | null;
+  hasCargoPhoto?: boolean;
   /** Null while the routing engine is out or an address has no position. */
   routeDistanceMeters: number | null;
   routeDurationSeconds: number | null;
@@ -108,6 +111,8 @@ export interface OpenFreight {
   routeDistanceMeters: number | null;
   routeDurationSeconds: number | null;
   stops: OpenStop[];
+  driverNote?: string | null;
+  hasCargoPhoto?: boolean;
 }
 
 export interface SubmitProposalRequest {
@@ -140,6 +145,23 @@ export interface DriverDeliverySummary {
   /** Absent on API versions that predate the signatures. */
   driverSigned?: boolean;
   customerSigned?: boolean;
+  deliveredAt?: string | null;
+  agendaStartsAt?: string | null;
+  agendaEndsAt?: string | null;
+  cargoDescription?: string | null;
+  cargoWeightKg?: number | null;
+  originDistrict?: string | null;
+  originCity?: string | null;
+  destinationDistrict?: string | null;
+  destinationCity?: string | null;
+  routeDistanceMeters?: number | null;
+  routeDurationSeconds?: number | null;
+  vehiclePlate?: string | null;
+  vehicleModel?: string | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
+  platformFee?: number | null;
+  driverNet?: number | null;
   createdAt: string;
 }
 
@@ -158,8 +180,22 @@ export interface DeliveryRoute {
   freightRequestId: string;
   cargoDescription: string;
   cargoWeightKg: number;
+  driverNote?: string | null;
+  hasCargoPhoto?: boolean;
   view: RouteView;
   totalStops: number;
   completedStops: number;
   stops: RouteStop[];
+}
+
+export interface DriverMetrics {
+  freightsSeen: number;
+  freightsMissed: number;
+  proposalsSent: number;
+  proposalsAccepted: number;
+  proposalsRejected: number;
+  proposalsExpired: number;
+  acceptanceRate: number;
+  deliveriesCompleted: number;
+  deliveriesCancelled: number;
 }

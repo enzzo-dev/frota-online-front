@@ -22,6 +22,7 @@ import { CountdownComponent } from '../../shared/components/countdown.component'
 import { EmptyStateComponent } from '../../shared/components/empty-state.component';
 import { FreeFreightBannerComponent } from '../../shared/components/free-freight-banner.component';
 import { HeroComponent } from '../../shared/components/hero.component';
+import { PageBarComponent } from '../../shared/components/page-bar.component';
 import { ProblemAlertComponent } from '../../shared/components/problem-alert.component';
 import { StatusChipComponent } from '../../shared/components/status-chip.component';
 import { UtcPipe } from '../../shared/pipes/utc.pipe';
@@ -46,6 +47,7 @@ const POLL_MS = 20_000;
     EmptyStateComponent,
     FreeFreightBannerComponent,
     HeroComponent,
+    PageBarComponent,
     ProblemAlertComponent,
     StatusChipComponent,
     UtcPipe,
@@ -73,12 +75,14 @@ const POLL_MS = 20_000;
     }
   `,
   template: `
+    <app-page-bar title="Propostas" backHref="/driver/home" />
+
     <ion-content [fullscreen]="true">
       <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
         <ion-refresher-content />
       </ion-refresher>
 
-      <div class="page page--wide">
+      <div class="page page--wide page--with-bar">
         <app-hero
           title="Minhas propostas"
           lede="Acompanhe o que você enviou. Quando o cliente aprova, a corrida aparece em Corridas."

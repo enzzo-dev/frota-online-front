@@ -13,6 +13,7 @@ import { createRequestState } from '../../../core/ui/request-state';
 import { ToastService } from '../../../core/ui/toast.service';
 import { Poller } from '../../../core/util/poller';
 import { HeroComponent } from '../../../shared/components/hero.component';
+import { PageBarComponent } from '../../../shared/components/page-bar.component';
 import { ProblemAlertComponent } from '../../../shared/components/problem-alert.component';
 import { StatusChipComponent } from '../../../shared/components/status-chip.component';
 import { UtcPipe } from '../../../shared/pipes/utc.pipe';
@@ -37,6 +38,7 @@ const REVIEW_POLL_MS = 15_000;
     IonRefresherContent,
     IonSpinner,
     HeroComponent,
+    PageBarComponent,
     ProblemAlertComponent,
     StatusChipComponent,
     UtcPipe,
@@ -47,12 +49,14 @@ const REVIEW_POLL_MS = 15_000;
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './profile.page.scss',
   template: `
+    <app-page-bar title="Cadastro" backHref="/driver/account" />
+
     <ion-content [fullscreen]="true">
       <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
         <ion-refresher-content />
       </ion-refresher>
 
-      <div class="page">
+      <div class="page page--with-bar">
         <app-hero [title]="heroTitle()" [lede]="heroLede()">
           @if (status() === 'Approved') {
             <a class="btn btn--on-dark" routerLink="/driver/freights">Ver fretes abertos</a>

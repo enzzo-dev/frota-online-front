@@ -112,6 +112,7 @@ export class MapViewComponent implements OnDestroy {
   readonly draggable = input(false);
   /** Where the driver is now, drawn as a vehicle marker that moves without re-fitting the map. */
   readonly driver = input<DriverLocation | null>(null);
+  readonly centerOnDriver = input(false);
   readonly ariaLabel = input('Mapa da rota');
   readonly pinMoved = output<GeoPoint>();
 
@@ -268,6 +269,9 @@ export class MapViewComponent implements OnDestroy {
     if (this.driverMarker) {
       this.driverMarker.setLatLng(at);
       return;
+    }
+    if (this.centerOnDriver()) {
+      this.map?.setView(at, 15);
     }
     this.driverMarker = L.marker(at, {
       icon: L.divIcon({

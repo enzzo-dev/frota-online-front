@@ -65,6 +65,7 @@ export interface CustomerDeliverySummary {
   status: DeliveryStatus;
   agreedPrice: number;
   driverName: string;
+  driverPhone?: string | null;
   vehicleType: VehicleType;
   vehicleModel: string;
   vehiclePlate: string;
